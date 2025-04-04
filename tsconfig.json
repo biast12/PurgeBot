@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2021", // Target modern JavaScript
+    "module": "CommonJS", // Use CommonJS for compatibility with Node.js
+    "strict": true, // Enable strict type checking
+    "esModuleInterop": true, // Allow default imports from CommonJS modules
+    "forceConsistentCasingInFileNames": true, // Enforce consistent casing in imports
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "outDir": "./dist", // Output compiled files to the 'dist' directory
+    "rootDir": "./", // Specify the root directory of input files
+    "moduleResolution": "node", // Use Node.js module resolution
+    "resolveJsonModule": true, // Allow importing JSON files
+    "types": ["node"], // Include Node.js type definitions
+    "lib": ["ES2021", "DOM"] // Include modern JavaScript and DOM APIs
+  },
+  "include": ["**/*.ts"], // Include all TypeScript files in the project
+  "exclude": ["node_modules", "dist"] // Exclude 'node_modules' and 'dist' directories
+}

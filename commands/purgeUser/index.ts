@@ -1,16 +1,11 @@
-import { ApplicationCommandData, CommandInteraction, CommandInteractionOptionResolver, PermissionsBitField, ChannelType, ComponentType, MessageFlags } from "discord.js";
+import { ApplicationCommandData, CommandInteraction, CommandInteractionOptionResolver, PermissionsBitField, ComponentType, MessageFlags } from "discord.js";
 import applicationCommandData from "./applicationCommandData.json";
 import autocomplete_target_id from "./autocomplete/autocomplete_target_id";
 import autocomplete_user_id from "./autocomplete/autocomplete_user_id";
-import progressEmbed from "./embeds/progressEmbed";
-import doneEmbed from "./embeds/doneEmbed";
-import errorEmbed from "./embeds/errorEmbed";
-import cancelButton from "./buttons/cancelButton";
-import processChannels from "./processing/processChannels";
-import processForums from "./processing/processForums";
-import getChannels from "./utils/getChannels";
-import validateTarget from "./utils/validateTarget";
-import handleCommands, { isCanceled } from "./utils/handleCommands";
+import errorEmbed from "./components/embeds/errorEmbed";
+import selectMenuEmbed from "./components/embeds/selectMenuEmbed";
+import skipSelectMenu from "./utils/skipSelectMenu";
+import startPurgeProcess from "./utils/startPurgeProcess";
 
 // Track active commands per server
 const activeCommands = new Map<string, boolean>();
@@ -23,6 +18,11 @@ export default {
 
   async execute(interaction: CommandInteraction): Promise<void> {
     const guild = interaction.guild;
+    const options = interaction.options as CommandInteractionOptionResolver;
+    const targetId = options.getString("target_id", true);
+    const targetUserId = options.getString("user_id", true);
+    const targetSkip = options.getBoolean("target_skip", false);
+
     if (!guild) {
       await interaction.reply({
         embeds: [
@@ -64,131 +64,67 @@ export default {
         return;
       }
 
-      const options = interaction.options as CommandInteractionOptionResolver;
-      const targetId = options.getString("target_id", true);
-      const targetUserId = options.getString("user_id", true);
+      let skipChannels: string[] = [];
+      if (targetSkip) {
+        const { actionRow, targetCategory, error } = skipSelectMenu(guild, targetId);
 
-      // Validate the target and resolve the target name
-      const { isValid, targetName } = await validateTarget(guild, targetId);
-
-      if (!isValid) {
-        await interaction.reply({
-          embeds: [
-            errorEmbed(
-              "Invalid Target",
-              "The provided target ID does not belong to this server."
-            ),
-          ],
-          flags: MessageFlags.Ephemeral,
-        });
-        return;
-      }
-
-      console.log(`🚀 purgeUser command executed by "${interaction.user.tag}" (${interaction.user.id}) in "${guild.name}" (${guild.id})`);
-      console.log(`🔍 Interaction ID: ${interaction.id}`);
-
-      const targetUser = await interaction.client.users.fetch(targetUserId).catch(() => null);
-      const targetUsername = targetUser ? targetUser.username : "Unknown User";
-
-      const startTime = Date.now();
-      const progress: { name: string; value: string; inline: boolean }[] = [];
-
-      const progressEmbedInstance = progressEmbed(
-        targetUsername,
-        targetName,
-        progress
-      );
-
-      // Create a cancel button
-      const actionRow = cancelButton(interaction.id);
-
-      await interaction.reply({
-        embeds: [progressEmbedInstance],
-        components: [actionRow],
-      });
-
-      const collector = interaction.channel?.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 15 * 60 * 1000, // 15 minutes timeout
-      });
-
-      // Use the handleCommands utility
-      handleCommands(interaction, collector, interaction.id, (value) => {
-        if (!value) {
-          activeCommands.delete(guild.id); // Release the lock for this server
-        }
-      });
-
-      try {
-        const channels = getChannels(targetId, guild);
-        let totalDeleted = 0;
-
-        for (const channel of channels) {
-          if (isCanceled(interaction.id, guild.id)) return;
-
-          let channelDeleted = 0;
-
-          if (channel.type === ChannelType.GuildForum) {
-            channelDeleted += await processForums(
-              channel,
-              targetUserId,
-              interaction,
-              progress,
-              targetUsername,
-              targetName,
-              guild.id
-            );
-          } else if (
-            channel.type === ChannelType.GuildText ||
-            channel.type === ChannelType.PublicThread ||
-            channel.type === ChannelType.PrivateThread ||
-            channel.type === ChannelType.GuildAnnouncement ||
-            channel.type === ChannelType.GuildVoice
-          ) {
-            channelDeleted += await processChannels(
-              channel,
-              targetUserId,
-              interaction,
-              progress,
-              targetUsername,
-              targetName,
-              guild.id
-            );
-          }
-
-          totalDeleted += channelDeleted;
-        }
-
-        const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
-        const doneEmbedInstance = doneEmbed(
-          targetUsername,
-          targetName,
-          progress,
-          totalDeleted,
-          totalTime
-        );
-
-        if (!isCanceled(interaction.id, guild.id)) {
-          await interaction.editReply({
-            embeds: [doneEmbedInstance],
-            components: [],
-          });
-          await interaction.followUp({
-            content: `<@${interaction.user.id}> The purge operation has been completed successfully!`,
+        if (error) {
+          await interaction.reply({
+            embeds: [error],
             flags: MessageFlags.Ephemeral,
           });
-          console.log(`✅ Purge (${interaction.id}) operation completed successfully.`);
+          return;
         }
-      } catch (error: any) {
-        console.error(`❌ Purge (${interaction.id}) operation failed: ${error.message}`);
-        const errorEmbedInstance = errorEmbed(
-          "Error Occurred",
-          `An error occurred while processing the purge operation: ${error.message}`
-        );
-        await interaction.editReply({ embeds: [errorEmbedInstance], components: [] });
+
+        const categoryName = guild.channels.cache.get(targetId)?.name || "Unknown Category";
+
+        await interaction.reply({
+          embeds: [selectMenuEmbed(categoryName)],
+          components: [actionRow],
+        });
+
+        const collector = interaction.channel?.createMessageComponentCollector({
+          componentType: ComponentType.StringSelect,
+          time: 60 * 1000, // 1 minute timeout
+        });
+
+        collector?.on("collect", async (i) => {
+          if (i.user.id !== interaction.user.id) return;
+
+          skipChannels = i.values;
+          await i.update({ components: [] }); // Clear the components
+          collector.stop();
+          if (skipChannels.length === targetCategory.children.cache.size) {
+            await interaction.editReply({
+              embeds: [errorEmbed("Invalid Selection", "You cannot skip all channels in the category.")],
+            });
+            return;
+          }
+
+          await startPurgeProcess(guild, interaction, activeCommands, targetId, targetUserId, skipChannels);
+        });
+
+        collector?.on("end", async (collected, reason) => {
+          if (reason === "time") {
+            await interaction.editReply({ embeds: [errorEmbed("Timeout", "Channel selection timed out.")], components: [] });
+          }
+          activeCommands.delete(guild.id); // Ensure the lock is released after collector ends
+        });
+      } else {
+        await startPurgeProcess(guild, interaction, activeCommands, targetId, targetUserId, skipChannels);
+        activeCommands.delete(guild.id); // Ensure the lock is released after purge process completes
       }
-    } finally {
-      activeCommands.delete(guild.id); // Ensure the lock is released
+    } catch (error) {
+      console.error("Error executing command:", error);
+      await interaction.reply({
+        embeds: [
+          errorEmbed(
+            "Command Execution Error",
+            "An error occurred while executing the command. Please try again later."
+          ),
+        ],
+        flags: MessageFlags.Ephemeral,
+      });
     }
-  },
+  }
 };

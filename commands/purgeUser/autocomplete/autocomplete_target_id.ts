@@ -40,7 +40,7 @@ export default async function autocomplete(interaction: AutocompleteInteraction)
                 ? "💬"
                 : channel.type === ChannelType.GuildVoice
                 ? "🔊"
-                : channel.type === ChannelType.GuildNews
+                : channel.type === ChannelType.GuildAnnouncement
                 ? "📰"
                 : "📺"
             }) ${channel.name}`,
@@ -61,7 +61,7 @@ export default async function autocomplete(interaction: AutocompleteInteraction)
             ? "💬"
             : channel.type === ChannelType.GuildVoice
             ? "🔊"
-            : channel.type === ChannelType.GuildNews
+            : channel.type === ChannelType.GuildAnnouncement
             ? "📰"
             : "📺"
         }) ${channel.name}`,

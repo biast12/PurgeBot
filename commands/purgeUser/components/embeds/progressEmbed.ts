@@ -9,7 +9,7 @@ export default (
 
   return new EmbedBuilder()
     .setTitle(`🔄 Purging Messages`)
-    .setDescription(`Purging messages from **${targetUsername}** in **${targetName}**.`)
+    .setDescription(`Purging messages from **${targetUsername}**\nIn **${targetName}**.`)
     .addFields(...limitedProgress)
     .setColor("#00b0f4")
     .setFooter({ text: "This process may take some time. Please wait...", iconURL: "https://i.imgur.com/FugULYw.png" });

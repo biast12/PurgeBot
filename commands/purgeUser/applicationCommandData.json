@@ -15,6 +15,12 @@
       "type": 3,
       "required": true,
       "autocomplete": true
+    },
+    {
+      "name": "target_skip",
+      "description": "Whether to skip specific targets when purging messages.",
+      "type": 5,
+      "required": false
     }
   ]
 }

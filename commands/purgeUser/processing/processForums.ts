@@ -1,7 +1,7 @@
 import { ForumChannel, CommandInteraction, ThreadChannel } from "discord.js";
 import fetchMessages from "./fetchMessages";
 import deleteMessages from "./deleteMessages";
-import progressEmbed from "../embeds/progressEmbed";
+import progressEmbed from "../components/embeds/progressEmbed";
 import { isCanceled } from "../utils/handleCommands";
 import generateProgressBar from "../utils/generateProgressBar";
 

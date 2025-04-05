@@ -1,4 +1,4 @@
-import { AutocompleteInteraction, ChannelType } from "discord.js";
+import { AutocompleteInteraction, ChannelType, PermissionsBitField } from "discord.js";
 
 export default async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
   const focusedValue = interaction.options.getFocused();
@@ -21,6 +21,8 @@ export default async function autocomplete(interaction: AutocompleteInteraction)
   guild.channels.cache
     .filter((ch) => ch.type === ChannelType.GuildCategory)
     .forEach((category) => {
+      if (!category.permissionsFor(interaction.user)?.has(PermissionsBitField.Flags.ViewChannel)) return;
+
       options.push({
         name: `(📂) ${category.name}`,
         value: category.id,
@@ -30,12 +32,16 @@ export default async function autocomplete(interaction: AutocompleteInteraction)
       guild.channels.cache
         .filter((ch) => ch.parentId === category.id)
         .forEach((channel) => {
+          if (!channel.permissionsFor(interaction.user)?.has(PermissionsBitField.Flags.ViewChannel)) return;
+
           options.push({
             name: `(${
               channel.type === ChannelType.GuildText
                 ? "💬"
                 : channel.type === ChannelType.GuildVoice
-                ? "🔊" // Added icon for GuildVoice channels
+                ? "🔊"
+                : channel.type === ChannelType.GuildNews
+                ? "📰"
                 : "📺"
             }) ${channel.name}`,
             value: channel.id,
@@ -47,12 +53,16 @@ export default async function autocomplete(interaction: AutocompleteInteraction)
   guild.channels.cache
     .filter((ch) => !ch.parentId && ch.type !== ChannelType.GuildCategory)
     .forEach((channel) => {
+      if (!channel.permissionsFor(interaction.user)?.has(PermissionsBitField.Flags.ViewChannel)) return;
+
       options.push({
         name: `(${
           channel.type === ChannelType.GuildText
             ? "💬"
             : channel.type === ChannelType.GuildVoice
-            ? "🔊" // Added icon for GuildVoice channels
+            ? "🔊"
+            : channel.type === ChannelType.GuildNews
+            ? "📰"
             : "📺"
         }) ${channel.name}`,
         value: channel.id,

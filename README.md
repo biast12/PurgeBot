@@ -14,7 +14,7 @@ PurgeBot is a Discord bot that allows you to delete messages from a specific use
 
 - `/purgeuser` - Deletes all messages from a specific user in a server, category, or channel.
   - `target_id`: The server, category, or channel to purge messages from.
-  - `target_user_id`: The ID of the user whose messages will be deleted.
+  - `user_id`: The ID of the user whose messages will be deleted.
 - `/help` - Provides information about the bot's commands.
 
 ## Invite the Bot
@@ -41,7 +41,6 @@ You can invite this version of the bot to your server using the following link:
 
    ```env
    TOKEN=<your_bot_token>
-   CLIENT_ID=<your_bot_client_id>
    ```
 
 4. Build the project:

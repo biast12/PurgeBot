@@ -1,7 +1,7 @@
-import { TextChannel, ThreadChannel, Message } from "discord.js";
+import { TextChannel, ThreadChannel, NewsChannel, VoiceChannel, Message } from "discord.js";
 
 export default async function deleteMessages(
-  channel: TextChannel | ThreadChannel,
+  channel: TextChannel | ThreadChannel | NewsChannel | VoiceChannel,
   messages: Message[],
   isCanceled: () => boolean,
   isOld: boolean,
@@ -11,7 +11,7 @@ export default async function deleteMessages(
 
   if (!isOld) {
     if (messages.length > 0 && !isCanceled()) {
-      await channel.bulkDelete(messages, true).catch(() => { });
+      await channel.bulkDelete(messages, true).catch(() => { }); // Bulk delete messages from before 14 days
       totalDeleted += messages.length;
     }
   } else {
@@ -22,7 +22,7 @@ export default async function deleteMessages(
       const msg = messages[i];
       try {
         if (!isCanceled()) {
-          await msg.delete();
+          await msg.delete(); // Delete the rest of the messages from after 14 days
         }
 
         totalDeleted++;

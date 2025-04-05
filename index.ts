@@ -7,7 +7,11 @@ import handleSlashCommandInteractions from "./client/handleSlashCommandInteracti
 dotenv.config();
 
 // Configuration variables
-const TOKEN: string = process.env.TOKEN || "";
+const TOKEN: string | undefined = process.env.TOKEN;
+
+if (!TOKEN || TOKEN.length === 0) {
+  throw new Error("Missing TOKEN in environment variables. Please set it in the .env file.");
+}
 
 // Initialize the Discord client with necessary intents
 const client = new Client({
@@ -23,12 +27,12 @@ const client = new Client({
 // Register the slash commands when the bot is ready
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user?.tag}`);
-  await registerSlashCommands(client);
+  await registerSlashCommands(client, TOKEN);
 });
 
 // Handle slash command interactions
 client.on("interactionCreate", async (interaction: Interaction) => {
-  await handleSlashCommandInteractions(interaction, client);
+  await handleSlashCommandInteractions(interaction);
 });
 
 // Log in the bot

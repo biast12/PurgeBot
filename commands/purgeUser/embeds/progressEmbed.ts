@@ -5,7 +5,6 @@ export default (
   targetName: string,
   progress: { name: string; value: string; inline: boolean }[]
 ): EmbedBuilder => {
-  // Ensure the progress array does not exceed 25 fields
   const limitedProgress = progress.slice(-25); // Keep only the last 25 items
 
   return new EmbedBuilder()

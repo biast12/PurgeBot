@@ -1,4 +1,4 @@
-import { CommandInteraction, ApplicationCommandData, MessageFlags } from "discord.js";
+import { ApplicationCommandData, CommandInteraction, MessageFlags } from "discord.js";
 import applicationCommandData from "./applicationCommandData.json";
 import helpEmbed from "./embeds/helpEmbed";
 

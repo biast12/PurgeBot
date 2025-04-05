@@ -14,21 +14,25 @@ export default async function autocomplete(interaction: AutocompleteInteraction)
   // Add all members of the server
   const members = await guild.members.fetch();
   members.forEach((member) => {
-    options.push({
-      name: `${member.user.tag}`,
-      value: member.user.id,
-    });
+    if (!member.user.tag.startsWith("deleted_user_")) { // Filter out deleted users
+      options.push({
+        name: `${member.user.displayName}`,
+        value: member.user.id,
+      });
+    }
   });
 
   // Add a "Deleted User" option
+  const deleteUserId = "456226577798135808";
   options.push({
-    name: "Deleted User",
-    value: "456226577798135808",
+    name: `Deleted User (${deleteUserId})`,
+    value: deleteUserId,
   });
 
   // Filter options based on the user's input
   const filtered = options.filter((option) =>
-    option.name.toLowerCase().includes(focusedValue.toLowerCase())
+    option.name.toLowerCase().includes(focusedValue.toLowerCase()) ||
+    option.value.includes(focusedValue)
   );
 
   await interaction.respond(filtered.slice(0, 25)); // Discord allows a maximum of 25 options

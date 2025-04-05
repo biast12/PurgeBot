@@ -1,16 +1,7 @@
-import {
-  PermissionsBitField,
-  ChannelType,
-  CommandInteraction,
-  Client,
-  ApplicationCommandData,
-  CommandInteractionOptionResolver,
-  ComponentType,
-  MessageFlags,
-} from "discord.js";
+import { ApplicationCommandData, CommandInteraction, CommandInteractionOptionResolver, PermissionsBitField, ChannelType, ComponentType, MessageFlags } from "discord.js";
 import applicationCommandData from "./applicationCommandData.json";
 import autocomplete_target_id from "./autocomplete/autocomplete_target_id";
-import autocomplete_target_user_id from "./autocomplete/autocomplete_target_user_id";
+import autocomplete_user_id from "./autocomplete/autocomplete_user_id";
 import progressEmbed from "./embeds/progressEmbed";
 import doneEmbed from "./embeds/doneEmbed";
 import errorEmbed from "./embeds/errorEmbed";
@@ -28,16 +19,16 @@ export default {
   data: applicationCommandData as ApplicationCommandData,
 
   autocomplete_target_id,
-  autocomplete_target_user_id,
+  autocomplete_user_id,
 
-  async execute(interaction: CommandInteraction, client: Client): Promise<void> {
+  async execute(interaction: CommandInteraction): Promise<void> {
     const guild = interaction.guild;
     if (!guild) {
       await interaction.reply({
         embeds: [
           errorEmbed(
-            "This command can only be used within a server.",
-            "Invalid Context"
+            "Invalid Context",
+            "This command can only be used within a server."
           ),
         ],
         flags: MessageFlags.Ephemeral,
@@ -49,8 +40,8 @@ export default {
       await interaction.reply({
         embeds: [
           errorEmbed(
-            "Another command is already in progress in this server. Please wait for it to finish before starting a new one.",
-            "Command Already in Progress"
+            "Command Already in Progress",
+            "Another command is already in progress in this server. Please wait for it to finish before starting a new one."
           ),
         ],
         flags: MessageFlags.Ephemeral,
@@ -65,7 +56,7 @@ export default {
           embeds: [
             errorEmbed(
               "Permission Denied",
-              "You do not have permission to use this command."
+              "Administrator permissions are required to use this command."
             ),
           ],
           flags: MessageFlags.Ephemeral,
@@ -75,7 +66,7 @@ export default {
 
       const options = interaction.options as CommandInteractionOptionResolver;
       const targetId = options.getString("target_id", true);
-      const targetUserId = options.getString("target_user_id", true);
+      const targetUserId = options.getString("user_id", true);
 
       // Validate the target and resolve the target name
       const { isValid, targetName } = await validateTarget(guild, targetId);
@@ -84,8 +75,8 @@ export default {
         await interaction.reply({
           embeds: [
             errorEmbed(
-              "The provided target ID does not belong to this server.",
-              "Invalid Target"
+              "Invalid Target",
+              "The provided target ID does not belong to this server."
             ),
           ],
           flags: MessageFlags.Ephemeral,
@@ -96,7 +87,7 @@ export default {
       console.log(`🚀 purgeUser command executed by "${interaction.user.tag}" (${interaction.user.id}) in "${guild.name}" (${guild.id})`);
       console.log(`🔍 Interaction ID: ${interaction.id}`);
 
-      const targetUser = await client.users.fetch(targetUserId).catch(() => null);
+      const targetUser = await interaction.client.users.fetch(targetUserId).catch(() => null);
       const targetUsername = targetUser ? targetUser.username : "Unknown User";
 
       const startTime = Date.now();
@@ -147,7 +138,13 @@ export default {
               targetName,
               guild.id
             );
-          } else {
+          } else if (
+            channel.type === ChannelType.GuildText ||
+            channel.type === ChannelType.PublicThread ||
+            channel.type === ChannelType.PrivateThread ||
+            channel.type === ChannelType.GuildAnnouncement ||
+            channel.type === ChannelType.GuildVoice
+          ) {
             channelDeleted += await processChannels(
               channel,
               targetUserId,
@@ -185,7 +182,8 @@ export default {
       } catch (error: any) {
         console.error(`❌ Purge (${interaction.id}) operation failed: ${error.message}`);
         const errorEmbedInstance = errorEmbed(
-          error.message || "An unknown error occurred."
+          "Error Occurred",
+          `An error occurred while processing the purge operation: ${error.message}`
         );
         await interaction.editReply({ embeds: [errorEmbedInstance], components: [] });
       }

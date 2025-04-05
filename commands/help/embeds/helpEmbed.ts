@@ -7,7 +7,7 @@ export default (): EmbedBuilder => {
         .addFields(
             {
                 name: "/purgeuser",
-                value: `Deletes all messages from a specific user in a server, category, or channel.\n\n**Usage:**\n- \`/purgeuser target_id:<server/category/channel ID> target_user_id:<user ID>\`\n\n**Notes:**\n- You can delete messages from deleted users.\n- Only one user can be deleted at a time.`,
+                value: `Deletes all messages from a specific user in a server, category, or channel.\n\n**Usage:**\n- \`/purgeuser target_id:<server/category/channel ID> user_id:<user ID>\`\n\n**Notes:**\n- You can delete messages from deleted users.\n- Only one user can be deleted at a time.`,
                 inline: false,
             }
         )

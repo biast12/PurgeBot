@@ -1,22 +1,20 @@
 import { Client, REST, Routes } from "discord.js";
-import purgeUserCommand from "../commands/purgeUser";
 import helpCommand from "../commands/help";
-import dotenv from "dotenv";
+import purgeUserCommand from "../commands/purgeUser";
 
-// Load environment variables from .env file
-dotenv.config();
-
-const TOKEN: string = process.env.TOKEN || "";
-const CLIENT_ID: string = process.env.CLIENT_ID || "";
-
-export default async function registerSlashCommands(client: Client): Promise<void> {
+export default async function registerSlashCommands(client: Client, TOKEN: string): Promise<void> {
     const rest = new REST({ version: "10" }).setToken(TOKEN);
 
     try {
         console.log("🔧 Registering slash commands...");
 
-        await rest.put(Routes.applicationCommands(CLIENT_ID), {
-            body: [purgeUserCommand.data, helpCommand.data],
+        const clientId = client.application?.id;
+        if (!clientId) {
+            throw new Error("Client ID could not be retrieved. Ensure the client is logged in.");
+        }
+
+        await rest.put(Routes.applicationCommands(clientId), {
+            body: [helpCommand.data, purgeUserCommand.data],
         });
 
         console.log("✅ Slash commands registered successfully.");

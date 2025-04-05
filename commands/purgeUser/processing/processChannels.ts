@@ -1,4 +1,4 @@
-import { TextChannel, ThreadChannel, CommandInteraction } from "discord.js";
+import { TextChannel, ThreadChannel, NewsChannel, VoiceChannel, ChannelType, CommandInteraction } from "discord.js";
 import fetchMessages from "./fetchMessages";
 import deleteMessages from "./deleteMessages";
 import progressEmbed from "../embeds/progressEmbed";
@@ -6,7 +6,7 @@ import { isCanceled } from "../utils/handleCommands";
 import generateProgressBar from "../utils/generateProgressBar";
 
 export default async (
-  channel: TextChannel | ThreadChannel,
+  channel: TextChannel | ThreadChannel | NewsChannel | VoiceChannel,
   targetUserId: string,
   interaction: CommandInteraction,
   progress: { name: string; value: string; inline: boolean }[],
@@ -17,6 +17,17 @@ export default async (
   // Validate the channel object
   if (!channel || !channel.messages || typeof channel.messages.fetch !== "function") {
     throw new TypeError("Invalid channel object passed to processMessages.");
+  }
+
+  // Ensure the channel is either a TextChannel or ThreadChannel
+  if (
+    channel.type !== ChannelType.GuildText &&
+    channel.type !== ChannelType.PublicThread &&
+    channel.type !== ChannelType.PrivateThread &&
+    channel.type !== ChannelType.GuildAnnouncement &&
+    channel.type !== ChannelType.GuildVoice
+  ) {
+    throw new TypeError("Unsupported channel type passed to processMessages.");
   }
 
   let totalDeleted = 0;

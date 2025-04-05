@@ -1,7 +1,7 @@
-import { TextChannel, ThreadChannel, Message } from "discord.js";
+import { TextChannel, ThreadChannel, NewsChannel, VoiceChannel, Message } from "discord.js";
 
 export default async function fetchMessages(
-  channel: TextChannel | ThreadChannel,
+  channel: TextChannel | ThreadChannel | NewsChannel | VoiceChannel,
   targetUserId: string,
   isCanceled: () => boolean
 ): Promise<Message[]> {
@@ -34,14 +34,6 @@ export default async function fetchMessages(
 
     } catch (error: any) {
       console.error(`❌ Error fetching messages:`, error);
-
-      if (error.code === 429) {
-        const retryAfter = error.retry_after || 1000;
-        console.warn(`⚠️ Rate limited. Retrying after ${retryAfter}ms...`);
-        await new Promise(resolve => setTimeout(resolve, retryAfter));
-        continue;
-      }
-
       break;
     }
   }

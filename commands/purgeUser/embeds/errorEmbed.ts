@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 
-export default (description: string, title: string = "Error Occurred"): EmbedBuilder => {
+export default (title: string, description: string): EmbedBuilder => {
   return new EmbedBuilder()
     .setTitle("❌ " + title)
     .setDescription(description)

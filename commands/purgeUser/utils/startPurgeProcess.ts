@@ -4,10 +4,9 @@ import handleCommands from "../utils/handleCommands";
 import getChannels from "../utils/getChannels";
 import processChannels from "../processing/processChannels";
 import processForums from "../processing/processForums";
-import progressEmbed from "../components/embeds/progressEmbed";
-import cancelButton from "../components/buttons/cancelButton";
-import doneEmbed from "../components/embeds/doneEmbed";
-import errorEmbed from "../components/embeds/errorEmbed";
+import progressComponent from "../components/progressComponent";
+import doneComponent from "../components/doneComponent";
+import errorComponent from "../components/errorComponent";
 import { isCanceled } from "../utils/handleCommands";
 
 export default async function startPurgeProcess(
@@ -23,12 +22,10 @@ export default async function startPurgeProcess(
 
     if (!isValid) {
         await interaction.editReply({
-            embeds: [
-                errorEmbed(
-                    "Invalid Target",
-                    "The provided target ID does not belong to this server."
-                ),
-            ],
+            components: errorComponent(
+                "Invalid Target",
+                "The provided target ID does not belong to this server."
+            ),
         });
         return;
     }
@@ -42,24 +39,22 @@ export default async function startPurgeProcess(
     const startTime = Date.now();
     const progress: { name: string; value: string; inline: boolean }[] = [];
 
-    const progressEmbedInstance = progressEmbed(
+    const progressComponentInstances = progressComponent(
         targetUsername,
         targetName,
-        progress
+        progress,
+        interaction.id
     );
-
-    // Create a cancel button
-    const actionRow = cancelButton(interaction.id);
 
     if (interaction.replied || interaction.deferred) {
         await interaction.editReply({
-            embeds: [progressEmbedInstance],
-            components: [actionRow],
+            components: [...progressComponentInstances],
+            flags: MessageFlags.IsComponentsV2,
         });
     } else {
         await interaction.reply({
-            embeds: [progressEmbedInstance],
-            components: [actionRow],
+            components: [...progressComponentInstances],
+            flags: MessageFlags.IsComponentsV2,
         });
     }
 
@@ -118,19 +113,25 @@ export default async function startPurgeProcess(
         }
 
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
-        const doneEmbedInstance = doneEmbed(
+        const doneComponentInstance = doneComponent(
             targetUsername,
             targetName,
             progress,
             totalDeleted,
             totalTime
         );
-
         if (!isCanceled(interaction.id, guild.id)) {
-            await interaction.editReply({
-                embeds: [doneEmbedInstance],
-                components: [],
-            });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({
+                    components: doneComponentInstance,
+                    flags: MessageFlags.IsComponentsV2,
+                });
+            } else {
+                await interaction.reply({
+                    components: doneComponentInstance,
+                    flags: MessageFlags.IsComponentsV2,
+                });
+            }
             await interaction.followUp({
                 content: `<@${interaction.user.id}> The purge operation has been completed successfully!`,
                 flags: MessageFlags.Ephemeral,
@@ -139,10 +140,14 @@ export default async function startPurgeProcess(
         }
     } catch (error: any) {
         console.error(`❌ Purge (${interaction.id}) operation failed: ${error.message}`);
-        const errorEmbedInstance = errorEmbed(
+        const errorComponentInstance = errorComponent(
             "Error Occurred",
             `An error occurred while processing the purge operation: ${error.message}`
         );
-        await interaction.editReply({ embeds: [errorEmbedInstance], components: [] });
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({ components: errorComponentInstance, flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
+        } else {
+            await interaction.reply({ components: errorComponentInstance, flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
+        }
     }
 }

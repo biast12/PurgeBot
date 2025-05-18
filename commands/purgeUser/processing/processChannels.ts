@@ -1,7 +1,7 @@
 import { TextChannel, ThreadChannel, NewsChannel, VoiceChannel, ChannelType, CommandInteraction } from "discord.js";
 import fetchMessages from "./fetchMessages";
 import deleteMessages from "./deleteMessages";
-import progressEmbed from "../components/embeds/progressEmbed";
+import progressComponent from "../components/progressComponent";
 import { isCanceled } from "../utils/handleCommands";
 import generateProgressBar from "../utils/generateProgressBar";
 
@@ -40,9 +40,16 @@ export default async (
 
   if (isCanceled(interaction.id, guildId)) return totalDeleted;
 
+  const progressComponentInstances = progressComponent(
+    targetUsername,
+    targetName,
+    progress,
+    interaction.id
+  );
+
   if (!isCanceled(interaction.id, guildId)) {
     await interaction.editReply({
-      embeds: [progressEmbed(targetUsername, targetName, progress)],
+      components: [...progressComponentInstances],
     });
   }
 
@@ -67,7 +74,7 @@ export default async (
     progress[progress.length - 1].value = `Progress: ${progressBar}\nDeleted Messages: ${current}/${total}`;
     if (!isCanceled(interaction.id, guildId)) {
       await interaction.editReply({
-        embeds: [progressEmbed(targetUsername, targetName, progress)],
+        components: [...progressComponentInstances],
       });
     }
   });
@@ -77,7 +84,7 @@ export default async (
   if (!isCanceled(interaction.id, guildId)) {
     progress[progress.length - 1].value = `Progress: Completed\nDeleted Messages: ${totalDeleted}`;
     await interaction.editReply({
-      embeds: [progressEmbed(targetUsername, targetName, progress)],
+      components: [...progressComponentInstances],
     });
   }
 

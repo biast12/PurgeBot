@@ -1,4 +1,5 @@
 import { CommandInteraction, MessageComponentInteraction, MessageFlags } from "discord.js";
+import { ContainerBuilder, TextDisplayBuilder } from "discord.js";
 
 const activeCommands = new Map<string, Map<string, boolean>>();
 
@@ -39,14 +40,17 @@ export default function handleCommands(
       try {
         console.log(`❌ Interaction ${interaction.id} canceled`);
         await interaction.editReply({
-          embeds: [
-            {
-              title: "❌ Operation Canceled",
-              description: "The purge operation was canceled by the user.",
-              color: 0xff0000,
-            },
+          components: [
+            new ContainerBuilder()
+              .setAccentColor(0xff0000)
+              .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent("### ❌ Operation Canceled")
+              )
+              .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent("The purge operation was canceled by the user.")
+              ),
           ],
-          components: [],
+          flags: MessageFlags.IsComponentsV2,
         });
       } catch (error: any) {
         if (error.code === 50027) {
@@ -67,23 +71,6 @@ export default function handleCommands(
 
       // Stop the collector
       collector.stop();
-    }
-  });
-
-  collector?.on("end", async () => {
-    // Attempt to disable the cancel button after the collector ends
-    try {
-      await interaction.editReply({
-        components: [],
-      });
-    } catch (error: any) {
-      if (error.code === 50027) {
-        if (!isCanceled(interactionId, guildId)) {
-          console.error("❌ Interaction token expired. Cannot edit the reply.");
-        }
-      } else {
-        console.error("❌ Error editing interaction reply:", error);
-      }
     }
   });
 }

@@ -1,5 +1,5 @@
 import { Guild, ActionRowBuilder, StringSelectMenuBuilder, ChannelType } from "discord.js";
-import errorEmbed from "../components/embeds/errorEmbed";
+import errorComponent from "../components/errorComponent";
 
 export default function skipSelectMenu(guild: Guild, targetId: string) {
     const targetCategory = guild.channels.cache.get(targetId);
@@ -7,14 +7,14 @@ export default function skipSelectMenu(guild: Guild, targetId: string) {
     if (!targetCategory) {
         if (targetId === guild.id) {
             return {
-                error: errorEmbed(
+                error: errorComponent(
                     "Invalid Target",
                     "You must select a category to display its channels. Selecting a server or a single channel is not allowed."
                 ),
             };
         } else {
             return {
-                error: errorEmbed(
+                error: errorComponent(
                     "Invalid Target",
                     "The provided target ID does not exist in this server."
                 ),
@@ -24,7 +24,7 @@ export default function skipSelectMenu(guild: Guild, targetId: string) {
 
     if (targetCategory.type !== ChannelType.GuildCategory) {
         return {
-            error: errorEmbed(
+            error: errorComponent(
                 "Invalid Target",
                 "You must select a category to display its channels. Selecting a server or a single channel is not allowed."
             ),
@@ -41,7 +41,7 @@ export default function skipSelectMenu(guild: Guild, targetId: string) {
 
     if (channels.length === 0) {
         return {
-            error: errorEmbed(
+            error: errorComponent(
                 "No Channels Found",
                 "The selected category does not contain any text-based channels."
             ),

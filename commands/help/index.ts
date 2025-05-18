@@ -1,11 +1,11 @@
 import { ApplicationCommandData, CommandInteraction, MessageFlags } from "discord.js";
 import applicationCommandData from "./applicationCommandData.json";
-import helpEmbed from "./embeds/helpEmbed";
+import helpComponent from "./components/helpComponent";
 
 export default {
     data: applicationCommandData as ApplicationCommandData,
 
     async execute(interaction: CommandInteraction): Promise<void> {
-        await interaction.reply({ embeds: [helpEmbed()], flags: MessageFlags.Ephemeral });
+        await interaction.reply({ components: helpComponent(), flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
     },
 };

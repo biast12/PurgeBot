@@ -1,9 +1,8 @@
-import { ApplicationCommandData, CommandInteraction, CommandInteractionOptionResolver, PermissionsBitField, ComponentType, MessageFlags } from "discord.js";
+import { ApplicationCommandData, CommandInteraction, CommandInteractionOptionResolver, PermissionsBitField, ComponentType, MessageFlags, ContainerBuilder, TextDisplayBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import applicationCommandData from "./applicationCommandData.json";
 import autocomplete_target_id from "./autocomplete/autocomplete_target_id";
 import autocomplete_user_id from "./autocomplete/autocomplete_user_id";
-import errorEmbed from "./components/embeds/errorEmbed";
-import selectMenuEmbed from "./components/embeds/selectMenuEmbed";
+import errorComponent from "./components/errorComponent";
 import skipSelectMenu from "./utils/skipSelectMenu";
 import startPurgeProcess from "./utils/startPurgeProcess";
 
@@ -25,26 +24,22 @@ export default {
 
     if (!guild) {
       await interaction.reply({
-        embeds: [
-          errorEmbed(
-            "Invalid Context",
-            "This command can only be used within a server."
-          ),
-        ],
-        flags: MessageFlags.Ephemeral,
+        components: errorComponent(
+          "Invalid Context",
+          "This command can only be used within a server."
+        ),
+        flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
       });
       return;
     }
 
     if (activeCommands.get(guild.id)) {
       await interaction.reply({
-        embeds: [
-          errorEmbed(
-            "Command Already in Progress",
-            "Another command is already in progress in this server. Please wait for it to finish before starting a new one."
-          ),
-        ],
-        flags: MessageFlags.Ephemeral,
+        components: errorComponent(
+          "Command Already in Progress",
+          "Another command is already in progress in this server. Please wait for it to finish before starting a new one."
+        ),
+        flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
       });
       return;
     }
@@ -53,13 +48,11 @@ export default {
     try {
       if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
         await interaction.reply({
-          embeds: [
-            errorEmbed(
-              "Permission Denied",
-              "Administrator permissions are required to use this command."
-            ),
-          ],
-          flags: MessageFlags.Ephemeral,
+          components: errorComponent(
+            "Permission Denied",
+            "Administrator permissions are required to use this command."
+          ),
+          flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
         });
         return;
       }
@@ -70,45 +63,65 @@ export default {
 
         if (error) {
           await interaction.reply({
-            embeds: [error],
-            flags: MessageFlags.Ephemeral,
+            components: error,
+            flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
           });
           return;
         }
 
         const categoryName = guild.channels.cache.get(targetId)?.name || "Unknown Category";
 
+        const selectMenuRow = new ActionRowBuilder<StringSelectMenuBuilder>()
+          .addComponents(actionRow.components[0]);
+        const submitButtonRow = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId("submit_skip_channels")
+              .setLabel("Continue")
+              .setStyle(ButtonStyle.Primary)
+          );
+
+        let selectedChannels: string[] = [];
+
         await interaction.reply({
-          embeds: [selectMenuEmbed(categoryName)],
-          components: [actionRow],
+          components: [
+            new TextDisplayBuilder().setContent(`You have selected the category **${categoryName}**.`),
+            new TextDisplayBuilder().setContent("Please select the channels you want to skip from the dropdown menu below."),
+            selectMenuRow,
+            submitButtonRow,
+          ],
+          flags: MessageFlags.IsComponentsV2,
         });
 
         const collector = interaction.channel?.createMessageComponentCollector({
+          componentType: ComponentType.Button,
+        });
+        const selectCollector = interaction.channel?.createMessageComponentCollector({
           componentType: ComponentType.StringSelect,
-          time: 60 * 1000, // 1 minute timeout
+        });
+
+        selectCollector?.on("collect", async (i) => {
+          if (i.user.id !== interaction.user.id) return;
+          selectedChannels = i.values;
+          await i.deferUpdate();
         });
 
         collector?.on("collect", async (i) => {
           if (i.user.id !== interaction.user.id) return;
-
-          skipChannels = i.values;
-          await i.update({ components: [] }); // Clear the components
-          collector.stop();
-          if (skipChannels.length === targetCategory.children.cache.size) {
-            await interaction.editReply({
-              embeds: [errorEmbed("Invalid Selection", "You cannot skip all channels in the category.")],
-            });
-            return;
+          if (i.customId === "submit_skip_channels") {
+            // Use the last selected values or default to empty
+            const skipChannels = selectedChannels.length > 0 ? selectedChannels : [];
+            if (skipChannels.length === targetCategory.children.cache.size) {
+              await i.update({
+                components: errorComponent("Invalid Selection", "You cannot skip all channels in the category."),
+                flags: MessageFlags.IsComponentsV2,
+              });
+              return;
+            }
+            await startPurgeProcess(guild, interaction, activeCommands, targetId, targetUserId, skipChannels);
+            collector.stop();
+            selectCollector?.stop();
           }
-
-          await startPurgeProcess(guild, interaction, activeCommands, targetId, targetUserId, skipChannels);
-        });
-
-        collector?.on("end", async (collected, reason) => {
-          if (reason === "time") {
-            await interaction.editReply({ embeds: [errorEmbed("Timeout", "Channel selection timed out.")], components: [] });
-          }
-          activeCommands.delete(guild.id); // Ensure the lock is released after collector ends
         });
       } else {
         await startPurgeProcess(guild, interaction, activeCommands, targetId, targetUserId, skipChannels);
@@ -117,13 +130,11 @@ export default {
     } catch (error) {
       console.error("Error executing command:", error);
       await interaction.reply({
-        embeds: [
-          errorEmbed(
-            "Command Execution Error",
-            "An error occurred while executing the command. Please try again later."
-          ),
-        ],
-        flags: MessageFlags.Ephemeral,
+        components: errorComponent(
+          "Command Execution Error",
+          "An error occurred while executing the command. Please try again later."
+        ),
+        flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
       });
     }
   }

@@ -44,7 +44,7 @@ export default function handleCommands(
             new ContainerBuilder()
               .setAccentColor(0xff0000)
               .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent("### ❌ Operation Canceled")
+                new TextDisplayBuilder().setContent("### **❌ Operation Canceled**")
               )
               .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent("The purge operation was canceled by the user.")
@@ -54,13 +54,9 @@ export default function handleCommands(
         });
       } catch (error: any) {
         if (error.code === 50027) {
-          if (!isCanceled(interactionId, guildId)) {
-            console.error("❌ Interaction token expired. Cannot edit the reply.");
-            await buttonInteraction.reply({
-              content: `${interaction.user.id} The interaction token has expired, but the command is still processing. Please wait for it to complete.`,
-              flags: MessageFlags.Ephemeral,
-            });
-          }
+        } else if (error.code === 'InteractionAlreadyReplied') {
+          // Already replied, do nothing
+          console.error(`❌ Interaction (${interaction.id}) already replied. Cannot edit.`);
         } else {
           console.error("❌ Error editing interaction reply:", error);
         }

@@ -48,9 +48,16 @@ export default async (
   );
 
   if (!isCanceled(interaction.id, guildId)) {
-    await interaction.editReply({
-      components: [...progressComponentInstances],
-    });
+    try {
+      await interaction.editReply({
+        components: [...progressComponentInstances],
+      });
+    } catch (error: any) {
+      if (error.code === 50027) {
+        return totalDeleted;
+      }
+      throw error;
+    }
   }
 
   const userMessages = await fetchMessages(channel, targetUserId, () => isCanceled(interaction.id, guildId));
@@ -73,9 +80,16 @@ export default async (
 
     progress[progress.length - 1].value = `Progress: ${progressBar}\nDeleted Messages: ${current}/${total}`;
     if (!isCanceled(interaction.id, guildId)) {
-      await interaction.editReply({
-        components: [...progressComponentInstances],
-      });
+      try {
+        await interaction.editReply({
+          components: [...progressComponentInstances],
+        });
+      } catch (error: any) {
+        if (error.code === 50027) {
+          return;
+        }
+        throw error;
+      }
     }
   });
 
@@ -83,9 +97,16 @@ export default async (
 
   if (!isCanceled(interaction.id, guildId)) {
     progress[progress.length - 1].value = `Progress: Completed\nDeleted Messages: ${totalDeleted}`;
-    await interaction.editReply({
-      components: [...progressComponentInstances],
-    });
+    try {
+      await interaction.editReply({
+        components: [...progressComponentInstances],
+      });
+    } catch (error: any) {
+      if (error.code === 50027) {
+        return totalDeleted;
+      }
+      throw error;
+    }
   }
 
   return totalDeleted;

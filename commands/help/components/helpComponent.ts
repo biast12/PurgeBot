@@ -2,8 +2,10 @@ import { ContainerBuilder, TextDisplayBuilder } from "discord.js";
 
 export default () => {
   const container = new ContainerBuilder().setAccentColor(0x00b0f4);
+  const ICON_EMOJI_ID: string = process.env.ICON_EMOJI_ID || "1373420483680145490";
+  const SUPPORT_SERVER: string = process.env.SUPPORT_SERVER || "https://discord.gg/ERFffj9Qs7";
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent("### 📖 Help - PurgeBot")
+    new TextDisplayBuilder().setContent("### **📖 Help - PurgeBot**")
   );
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent("Here is a guide on how to use the bot's commands:")
@@ -15,7 +17,7 @@ export default () => {
   );
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      "Getting an unexpected error? join my support server https://discord.gg/ERFffj9Qs7"
+      `-# <:icon:${ICON_EMOJI_ID}> Getting an unexpected error? join my [support server](${SUPPORT_SERVER}) for help!`
     )
   );
   return [container];

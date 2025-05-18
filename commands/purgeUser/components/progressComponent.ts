@@ -1,4 +1,4 @@
-import { ContainerBuilder, TextDisplayBuilder } from "discord.js";
+import { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize } from "discord.js";
 import cancelButton from "./buttons/cancelButton";
 
 export default (
@@ -8,20 +8,20 @@ export default (
   interactionId: string
 ) => {
   const ICON_EMOJI_ID: string = process.env.ICON_EMOJI_ID || "1373420483680145490";
-  const limitedProgress = progress.slice(-25); // Keep only the last 25 items
   const container = new ContainerBuilder().setAccentColor(0x00b0f4);
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent("### 🔄 Purging Messages")
+    new TextDisplayBuilder().setContent("### **🔄 Purging Messages**")
   );
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `Purging messages from **${targetUsername}**\nIn **${targetName}**.`
+      `Purging messages from **${targetUsername}** in **${targetName}**.`
     )
   );
-  if (limitedProgress.length > 0) {
+  container.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(false));
+  if (progress.length > 0) {
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        limitedProgress.map((f) => `**${f.name}**: ${f.value}`).join("\n")
+        progress.map((f) => `**${f.name}**: ${f.value}`).join("\n")
       )
     );
   }

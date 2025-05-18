@@ -37,7 +37,6 @@ export default function skipSelectMenu(guild: Guild, targetId: string) {
             label: channel.name,
             value: channel.id,
         }))
-        .slice(0, 25); // Limit to a maximum of 25 channels
 
     if (channels.length === 0) {
         return {

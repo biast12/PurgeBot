@@ -1,4 +1,4 @@
-import { ContainerBuilder, TextDisplayBuilder } from "discord.js";
+import { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize } from "discord.js";
 
 export default (
   targetUsername: string,
@@ -28,13 +28,14 @@ export default (
   const container = new ContainerBuilder().setAccentColor(0x32e600);
 
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent("### 🎉 Purge Complete")
+    new TextDisplayBuilder().setContent("### **🎉 Purge Complete**")
   );
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `Successfully purged messages from **${targetUsername}** in **${targetName}**.`
     )
   );
+  container.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(false));
   if (progress.length > 0) {
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
@@ -42,9 +43,10 @@ export default (
       )
     );
   }
+  container.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(false));
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `<:trash:${TRASH_EMOJI_ID}> **Total Messages Deleted:** ${totalDeleted}\n<:time:${TIME_EMOJI_ID}> **Total Time Taken:** ${formattedTime}`
+      `### Summary\n<:trash:${TRASH_EMOJI_ID}> Total Messages Deleted: ${totalDeleted}\n<:time:${TIME_EMOJI_ID}> Total Time Taken: ${formattedTime}`
     )
   );
   container.addTextDisplayComponents(

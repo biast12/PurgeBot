@@ -3,7 +3,7 @@ import { ContainerBuilder, TextDisplayBuilder } from "discord.js";
 export default () => {
   const container = new ContainerBuilder().setAccentColor(0x00b0f4);
   const ICON_EMOJI_ID: string = process.env.ICON_EMOJI_ID || "1373420483680145490";
-  const SUPPORT_SERVER: string = process.env.SUPPORT_SERVER || "https://discord.gg/ERFffj9Qs7";
+  const SUPPORT_SERVER: string = process.env.SUPPORT_SERVER || "https://biast12.com/support";
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent("### **📖 Help - PurgeBot**")
   );

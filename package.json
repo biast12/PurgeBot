@@ -1,7 +1,15 @@
 {
+  "name": "purgebot",
+  "version": "1.0.0",
+  "description": "A Discord bot for efficient message purging with improved architecture",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+    "register": "node dist/scripts/register.js"
   },
   "devDependencies": {
     "@types/node": "^22.13.16",
@@ -10,5 +18,15 @@
   "dependencies": {
     "discord.js": "^14.19.3",
     "dotenv": "^16.4.7"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biast12/PurgeBot"
+  },
+  "keywords": ["discord", "bot", "purge", "moderation"],
+  "author": "biast12",
+  "license": "MIT"
 }

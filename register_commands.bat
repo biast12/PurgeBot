@@ -57,17 +57,6 @@ IF NOT EXIST "dist" (
     )
 )
 
-REM Check if register script exists
-IF NOT EXIST "dist\scripts\register.js" (
-    ECHO [WARNING] Register script not found. Rebuilding project...
-    npm run build
-    IF %ERRORLEVEL% NEQ 0 (
-        ECHO [ERROR] Failed to build TypeScript project.
-        PAUSE
-        EXIT /B 1
-    )
-)
-
 ECHO [INFO] Registering Discord slash commands...
 ECHO ============================================
 ECHO.

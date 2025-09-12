@@ -12,7 +12,6 @@ export class AutocompleteService {
 
     const choices = [];
     
-    // Add server option
     if (guild.name.toLowerCase().includes(focusedValue) || focusedValue === '') {
       choices.push({
         name: `📍 Server: ${guild.name}`,
@@ -20,13 +19,11 @@ export class AutocompleteService {
       });
     }
 
-    // Add categories
     const categories = guild.channels.cache
       .filter(ch => ch.type === ChannelType.GuildCategory)
       .filter(ch => ch.name.toLowerCase().includes(focusedValue));
     
     categories.forEach(category => {
-      // Check if category has text channels
       const hasTextChannels = guild.channels.cache.some(
         ch => ch.parentId === category.id && this.isTextChannel(ch.type)
       );
@@ -39,7 +36,6 @@ export class AutocompleteService {
       }
     });
 
-    // Add text channels
     const channels = guild.channels.cache
       .filter(ch => this.isTextChannel(ch.type))
       .filter(ch => ch.name.toLowerCase().includes(focusedValue));
@@ -52,7 +48,6 @@ export class AutocompleteService {
       });
     });
 
-    // Limit to 25 choices (Discord's limit)
     await interaction.respond(choices.slice(0, 25));
   }
 
@@ -67,7 +62,6 @@ export class AutocompleteService {
 
     const choices = [];
     
-    // If input looks like a user ID, suggest it
     if (/^\d{17,19}$/.test(focusedValue)) {
       choices.push({
         name: `User ID: ${focusedValue}`,
@@ -75,7 +69,6 @@ export class AutocompleteService {
       });
     }
 
-    // Search members if input is not purely numeric
     if (focusedValue.length >= 2 && !/^\d+$/.test(focusedValue)) {
       try {
         const members = await guild.members.fetch({ query: focusedValue, limit: 10 });
@@ -91,7 +84,6 @@ export class AutocompleteService {
       }
     }
 
-    // Add hint for deleted users
     if (choices.length === 0 && focusedValue.length > 0) {
       choices.push({
         name: "💡 Enter a valid user ID (17-19 digits)",

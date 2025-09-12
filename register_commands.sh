@@ -55,16 +55,6 @@ if [ ! -d "dist" ]; then
     fi
 fi
 
-# Check if register script exists
-if [ ! -f "dist/scripts/register.js" ]; then
-    echo -e "${YELLOW}[WARNING] Register script not found. Rebuilding project...${NC}"
-    npm run build
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}[ERROR] Failed to build TypeScript project.${NC}"
-        exit 1
-    fi
-fi
-
 echo -e "${BLUE}[INFO] Registering Discord slash commands...${NC}"
 echo "============================================"
 echo

@@ -25,8 +25,8 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-# Check if dist folder and index.js exist
-if [ ! -f "dist/index.js" ]; then
+# Check if dist folder and bot.js exist
+if [ ! -f "dist/bot.js" ]; then
     echo -e "${RED}[ERROR] Built files not found in dist/ directory${NC}"
     echo "Please run ./build.sh first to compile the TypeScript code."
     exit 1
@@ -45,7 +45,7 @@ echo "====================================================="
 echo
 
 # Run the compiled bot
-node dist/index.js
+node dist/bot.js
 EXIT_CODE=$?
 
 # Check if bot crashed

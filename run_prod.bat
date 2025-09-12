@@ -24,8 +24,8 @@ IF %ERRORLEVEL% NEQ 0 (
     EXIT /B 1
 )
 
-REM Check if dist folder and index.js exist
-IF NOT EXIST "dist\index.js" (
+REM Check if dist folder and bot.js exist
+IF NOT EXIST "dist\bot.js" (
     ECHO [ERROR] Built files not found in dist/ directory
     ECHO Please run build.bat first to compile the TypeScript code.
     PAUSE
@@ -46,7 +46,7 @@ ECHO =====================================================
 ECHO.
 
 REM Run the compiled bot
-node dist/index.js
+node dist/bot.js
 
 REM Check if bot crashed
 IF %ERRORLEVEL% NEQ 0 (

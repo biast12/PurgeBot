@@ -1,11 +1,11 @@
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 import { OperationState } from "../types";
 
 export class OperationManager {
   private operations: Map<string, OperationState> = new Map();
   private guildLocks: Map<string, string> = new Map(); // guildId -> operationId
 
-  createOperation(interaction: CommandInteraction, guildId: string): string {
+  createOperation(interaction: ChatInputCommandInteraction, guildId: string): string {
     const operationId = `${guildId}-${Date.now()}`;
     
     const operation: OperationState = {

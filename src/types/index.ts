@@ -1,6 +1,6 @@
 import { 
-  Guild, 
-  CommandInteraction, 
+  Client,
+  ChatInputCommandInteraction,
   TextChannel, 
   ThreadChannel, 
   NewsChannel, 
@@ -11,6 +11,16 @@ import {
 
 export type SupportedChannel = TextChannel | ThreadChannel | NewsChannel | VoiceChannel | ForumChannel;
 export type TextBasedChannel = TextChannel | ThreadChannel | NewsChannel | VoiceChannel;
+
+export interface CommandContext {
+  client: Client;
+  interaction: ChatInputCommandInteraction;
+}
+
+export interface AutocompleteContext {
+  client: Client;
+  interaction: AutocompleteInteraction;
+}
 
 export interface PurgeOptions {
   targetId: string;
@@ -38,11 +48,6 @@ export interface PurgeResult {
   }[];
 }
 
-export interface CommandContext {
-  interaction: CommandInteraction;
-  guild: Guild;
-  startTime: number;
-}
 
 export interface ValidationResult {
   isValid: boolean;
@@ -71,7 +76,7 @@ export interface BotConfig {
 
 export type CommandHandler = {
   data: any;
-  execute: (interaction: CommandInteraction) => Promise<void>;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
   autocomplete?: Record<string, (interaction: AutocompleteInteraction) => Promise<void>>;
 };
 
@@ -80,5 +85,5 @@ export interface OperationState {
   guildId: string;
   cancelled: boolean;
   startTime: number;
-  interaction: CommandInteraction;
+  interaction: ChatInputCommandInteraction;
 }

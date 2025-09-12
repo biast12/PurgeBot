@@ -1,5 +1,5 @@
 import { 
-  CommandInteraction,
+  ChatInputCommandInteraction,
   Guild,
   ActionRowBuilder,
   StringSelectMenuBuilder,
@@ -8,11 +8,11 @@ import {
   EmbedBuilder,
   ChannelType
 } from "discord.js";
-import { CONSTANTS } from "../../../config/constants";
+import { CONSTANTS } from "../../config/constants";
 
 export class ChannelSkipHandler {
   async handle(
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     guild: Guild,
     categoryId: string,
     categoryName: string
@@ -23,7 +23,6 @@ export class ChannelSkipHandler {
       return { proceed: false };
     }
 
-    // Get all text channels in the category
     const textChannels = guild.channels.cache
       .filter(ch => ch.parentId === categoryId && this.isTextChannel(ch.type))
       .map(ch => ({
@@ -37,18 +36,16 @@ export class ChannelSkipHandler {
       return { proceed: false };
     }
 
-    // Create select menu
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId('skip_channels_select')
       .setPlaceholder('Select channels to skip (optional)')
       .setMinValues(0)
-      .setMaxValues(Math.min(textChannels.length - 1, 25)) // Can't skip all channels
+      .setMaxValues(Math.min(textChannels.length - 1, 25))
       .addOptions(textChannels.slice(0, 25));
 
     const selectRow = new ActionRowBuilder<StringSelectMenuBuilder>()
       .addComponents(selectMenu);
 
-    // Create buttons
     const continueButton = new ButtonBuilder()
       .setCustomId('skip_continue')
       .setLabel('Continue')
@@ -64,7 +61,6 @@ export class ChannelSkipHandler {
     const buttonRow = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(continueButton, cancelButton);
 
-    // Create embed
     const embed = new EmbedBuilder()
       .setColor(0x0099FF)
       .setTitle('Channel Selection')
@@ -75,13 +71,11 @@ export class ChannelSkipHandler {
       )
       .setFooter({ text: 'Select channels to skip or click Continue to purge all channels' });
 
-    // Send interaction
     await interaction.reply({
       embeds: [embed],
       components: [selectRow, buttonRow]
     });
 
-    // Wait for response
     return new Promise((resolve) => {
       let selectedChannels: string[] = [];
       let resolved = false;

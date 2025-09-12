@@ -1,4 +1,4 @@
-# PurgeBot v2.0
+# PurgeBot
 
 PurgeBot is a high-performance Discord bot designed for efficient message management with a clean, maintainable architecture.
 
@@ -123,18 +123,6 @@ npm run register
 # Clean and rebuild
 npm run rebuild
 ```
-
-## Architecture
-
-PurgeBot v2.0 features a clean, modular architecture:
-
-- **Services** - Core business logic (MessageService, PurgeService, ValidationService)
-- **Handlers** - Interaction routing and processing
-- **Commands** - Command definitions and execution logic
-- **Utils** - Reusable utilities (RateLimiter)
-- **Types** - TypeScript type definitions for type safety
-
-See [MIGRATION.md](MIGRATION.md) for details on the v2.0 architecture changes.
 
 ## License
 

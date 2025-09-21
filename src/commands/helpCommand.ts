@@ -1,4 +1,13 @@
-import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  TextDisplayBuilder,
+  ContainerBuilder,
+  SeparatorBuilder,
+  SeparatorSpacingSize
+} from 'discord.js';
 import { BaseCommand } from '../core/command';
 import { CommandContext } from '../types';
 import { ResponseBuilder, sendResponse } from '../core/response';
@@ -15,81 +24,97 @@ export class HelpCommand extends BaseCommand {
 
   public async execute(context: CommandContext): Promise<void> {
     const { interaction } = context;
-    
-    const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle('📚 PurgeBot Help')
-      .setDescription('PurgeBot helps you manage and clean up messages in your Discord server.')
-      .addFields(
-        {
-          name: '🗑️ /purgeuser',
-          value: 'Delete all messages from a specific user in your server, a category, or a channel.',
-          inline: false
-        },
-        {
-          name: 'Parameters',
-          value: 
-            '• `target_id` - The server, category, or channel to purge from\n' +
-            '• `user_id` - The ID of the user whose messages to delete\n' +
-            '• `skip_channels` - (Optional) Skip specific channels when purging a category',
-          inline: false
-        },
-        {
-          name: '📋 Features',
-          value: 
-            '• Purge messages server-wide, by category, or by channel\n' +
-            '• Smart rate limiting to avoid Discord API limits\n' +
-            '• Progress tracking with real-time updates\n' +
-            '• Support for deleted users (using their ID)\n' +
-            '• Cancel operations at any time\n' +
-            '• Automatic handling of old messages (>14 days)',
-          inline: false
-        },
-        {
-          name: '⚠️ Requirements',
-          value: 'Administrator permissions are required to use the purge command.',
-          inline: false
-        },
-        {
-          name: '💡 Tips',
-          value: 
-            '• Use autocomplete to easily select targets and users\n' +
-            '• You can purge messages from deleted users by entering their ID\n' +
-            '• The bot will automatically handle rate limits\n' +
-            '• Messages older than 14 days are deleted individually (slower)',
-          inline: false
-        }
-      )
-      .setFooter({ 
-        text: 'PurgeBot - Efficient Message Management',
-        iconURL: interaction.client.user?.displayAvatarURL()
-      })
-      .setTimestamp();
 
-    const inviteButton = new ButtonBuilder()
-      .setLabel('Invite Bot')
-      .setStyle(ButtonStyle.Link)
-      .setURL('https://discord.com/oauth2/authorize?client_id=1356612233878179921&permissions=294205352960&integration_type=0&scope=bot')
-      .setEmoji('🔗');
+    const response = new ResponseBuilder();
 
-    const supportButton = new ButtonBuilder()
-      .setLabel('Support Server')
-      .setStyle(ButtonStyle.Link)
-      .setURL('https://discord.gg/7XPzPxHh7W')
-      .setEmoji('❓');
+    // Main header with intro
+    response.addComponent(
+      new TextDisplayBuilder()
+        .setContent('# 📚 PurgeBot\n\nPowerful message management for Discord servers.')
+    );
 
-    const githubButton = new ButtonBuilder()
-      .setLabel('GitHub')
-      .setStyle(ButtonStyle.Link)
-      .setURL('https://github.com/biast12/PurgeBot')
-      .setEmoji('📂');
+    response.addComponent(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Small)
+        .setDivider(true)
+    );
 
+    // Commands overview in a compact container
+    response.addComponent(
+      new ContainerBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder()
+            .setContent('## 🗑️ Commands'),
+          new TextDisplayBuilder()
+            .setContent(
+              '**`/purge user`** - Delete messages from a specific user\n' +
+              '**`/purge role`** - Delete messages from role members\n' +
+              '**`/purge everyone`** - Clear all messages (channel/category only)\n' +
+              '**`/purge inactive`** - Remove messages from ex-members\n' +
+              '**`/purge deleted`** - Clean up deleted account messages'
+            )
+        )
+    );
+
+    // Common parameters in a single container
+    response.addComponent(
+      new ContainerBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder()
+            .setContent('## ⚙️ Parameters'),
+          new TextDisplayBuilder()
+            .setContent(
+              '* **target_id** - Where to purge (server/category/channel)\n' +
+              '* **days** - Time limit (1-30 days)\n' +
+              '* **skip_channels** - Exclude channels (category mode)\n' +
+              '* **user/role** - Target for specific commands'
+            )
+        )
+    );
+
+    response.addComponent(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Small)
+        .setDivider(true)
+    );
+
+    // Compact tips and requirements
+    response.addComponent(
+      new ContainerBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder()
+            .setContent('## 📋 Required Permissions'),
+          new TextDisplayBuilder()
+            .setContent(
+              '**Manage Messages** - To see channels and their content\n' +
+              '**View Channel** - To access existing messages for purging\n' +
+              '**Read History** - To delete messages\n\n' +
+              '-# Users need **Manage Messages** permission to use the purge commands.'
+            )
+        )
+    );
+
+    // Action buttons
     const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(inviteButton, supportButton, githubButton);
+      .addComponents(
+        new ButtonBuilder()
+          .setLabel('Invite Bot')
+          .setStyle(ButtonStyle.Link)
+          .setURL('https://discord.com/oauth2/authorize?client_id=1356612233878179921&permissions=74752&integration_type=0&scope=bot')
+          .setEmoji('🔗'),
+        new ButtonBuilder()
+          .setLabel('Support')
+          .setStyle(ButtonStyle.Link)
+          .setURL('https://discord.gg/7XPzPxHh7W')
+          .setEmoji('❓'),
+        new ButtonBuilder()
+          .setLabel('GitHub')
+          .setStyle(ButtonStyle.Link)
+          .setURL('https://github.com/biast12/PurgeBot')
+          .setEmoji('📂')
+      );
 
-    const response = new ResponseBuilder()
-      .addEmbed(embed)
-      .addComponent(row);
+    response.addComponent(row);
 
     await sendResponse(interaction, response);
   }

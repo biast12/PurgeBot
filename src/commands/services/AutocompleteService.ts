@@ -1,7 +1,7 @@
 import { AutocompleteInteraction, ChannelType } from "discord.js";
 
 export class AutocompleteService {
-  async handleTargetAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
+  async handleTargetAutocomplete(interaction: AutocompleteInteraction, excludeServer: boolean = false): Promise<void> {
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const guild = interaction.guild;
     
@@ -11,8 +11,8 @@ export class AutocompleteService {
     }
 
     const choices = [];
-    
-    if (guild.name.toLowerCase().includes(focusedValue) || focusedValue === '') {
+
+    if (!excludeServer && (guild.name.toLowerCase().includes(focusedValue) || focusedValue === '')) {
       choices.push({
         name: `📍 Server: ${guild.name}`,
         value: guild.id

@@ -24,8 +24,13 @@ export interface AutocompleteContext {
 
 export interface PurgeOptions {
   targetId: string;
-  userId: string;
+  userId?: string;
+  roleId?: string;
+  roleName?: string;
+  type?: 'user' | 'role' | 'everyone' | 'inactive';
+  days?: number | null;
   skipChannels: string[];
+  excludeMessageId?: string;
 }
 
 export interface PurgeProgress {
@@ -52,6 +57,7 @@ export interface PurgeResult {
 export interface ValidationResult {
   isValid: boolean;
   targetName?: string;
+  targetType?: 'server' | 'category' | 'channel';
   error?: string;
 }
 
@@ -86,4 +92,5 @@ export interface OperationState {
   cancelled: boolean;
   startTime: number;
   interaction: ChatInputCommandInteraction;
+  deletedCount?: number;
 }

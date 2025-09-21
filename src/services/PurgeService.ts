@@ -13,7 +13,33 @@ import { messageService } from "./MessageService";
 import { operationManager } from "./OperationManager";
 
 export class PurgeService {
+  async purgeMessages(
+    guild: Guild,
+    options: PurgeOptions,
+    operationId: string,
+    onProgress?: (update: any) => Promise<void>
+  ): Promise<PurgeResult> {
+    if (options.type === undefined) {
+      options.type = 'user';
+    }
+    return this.executePurge(guild, options, operationId, onProgress);
+  }
+
   async purgeUserMessages(
+    guild: Guild,
+    options: PurgeOptions,
+    operationId: string,
+    onProgress?: (update: any) => Promise<void>
+  ): Promise<PurgeResult> {
+    return this.purgeMessages(
+      guild, 
+      { ...options, type: 'user' }, 
+      operationId, 
+      onProgress
+    );
+  }
+
+  private async executePurge(
     guild: Guild,
     options: PurgeOptions,
     operationId: string,
@@ -28,6 +54,8 @@ export class PurgeService {
       channels: []
     };
 
+    let runningTotal = 0;
+
     try {
       const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels);
       
@@ -38,11 +66,23 @@ export class PurgeService {
           break;
         }
 
+        const wrappedProgress = async (update: any) => {
+          if (update.type === 'channel_complete' && update.deleted) {
+            runningTotal += update.deleted;
+            operationManager.updateDeletedCount(operationId, runningTotal);
+          }
+          
+          if (onProgress) {
+            await onProgress(update);
+          }
+        };
+
         const channelResult = await this.purgeChannel(
           channel,
-          options.userId,
+          options,
           operationId,
-          onProgress
+          wrappedProgress,
+          guild
         );
 
         result.totalDeleted += channelResult.deleted;
@@ -67,32 +107,55 @@ export class PurgeService {
     skipChannels: string[]
   ): Promise<SupportedChannel[]> {
     const channels: SupportedChannel[] = [];
-    
-    // If targetId is the guild ID, get all channels
+
     if (targetId === guild.id) {
-      guild.channels.cache.forEach(channel => {
+      await guild.channels.fetch();
+
+      for (const channel of guild.channels.cache.values()) {
         if (this.isTextBasedChannel(channel) && !skipChannels.includes(channel.id)) {
-          channels.push(channel as SupportedChannel);
+          try {
+            const fetchedChannel = await guild.channels.fetch(channel.id);
+            if (fetchedChannel && this.isTextBasedChannel(fetchedChannel)) {
+              channels.push(fetchedChannel as SupportedChannel);
+            }
+          } catch (err) {
+            console.error(`Could not fetch channel ${channel.id}:`, err);
+            channels.push(channel as SupportedChannel);
+          }
         }
-      });
+      }
     } else {
-      const target = guild.channels.cache.get(targetId);
+      let target;
+      try {
+        target = await guild.channels.fetch(targetId);
+      } catch (err) {
+        console.error(`Could not fetch target ${targetId}:`, err);
+        target = guild.channels.cache.get(targetId);
+      }
       
       if (!target) {
         throw new Error("Target channel or category not found");
       }
 
-      // If it's a category, get all channels in it
       if (target.type === ChannelType.GuildCategory) {
-        guild.channels.cache.forEach(channel => {
-          if (channel.parentId === targetId && 
-              this.isTextBasedChannel(channel) && 
+        await guild.channels.fetch();
+        
+        for (const channel of guild.channels.cache.values()) {
+          if (channel.parentId === targetId &&
+              this.isTextBasedChannel(channel) &&
               !skipChannels.includes(channel.id)) {
-            channels.push(channel as SupportedChannel);
+            try {
+              const fetchedChannel = await guild.channels.fetch(channel.id);
+              if (fetchedChannel && this.isTextBasedChannel(fetchedChannel)) {
+                channels.push(fetchedChannel as SupportedChannel);
+              }
+            } catch (err) {
+              console.error(`Could not fetch channel ${channel.id}:`, err);
+              channels.push(channel as SupportedChannel);
+            }
           }
-        });
+        }
       } else if (this.isTextBasedChannel(target)) {
-        // Single channel
         channels.push(target as SupportedChannel);
       } else {
         throw new Error("Target is not a valid text channel or category");
@@ -104,9 +167,10 @@ export class PurgeService {
 
   private async purgeChannel(
     channel: SupportedChannel,
-    userId: string,
+    options: PurgeOptions,
     operationId: string,
-    onProgress?: (update: any) => Promise<void>
+    onProgress?: (update: any) => Promise<void>,
+    guild?: Guild
   ): Promise<{ channelId: string; channelName: string; deleted: number; error?: string }> {
     const result = {
       channelId: channel.id,
@@ -123,20 +187,21 @@ export class PurgeService {
         });
       }
 
-      // Handle forum channels differently
       if (channel.type === ChannelType.GuildForum) {
         result.deleted = await this.purgeForumChannel(
           channel as ForumChannel,
-          userId,
+          options,
           operationId,
-          onProgress
+          onProgress,
+          guild
         );
       } else {
         result.deleted = await this.purgeTextChannel(
           channel as TextBasedChannel,
-          userId,
+          options,
           operationId,
-          onProgress
+          onProgress,
+          guild
         );
       }
 
@@ -157,15 +222,65 @@ export class PurgeService {
 
   private async purgeTextChannel(
     channel: any,
-    userId: string,
+    options: PurgeOptions,
     operationId: string,
-    onProgress?: (update: any) => Promise<void>
+    onProgress?: (update: any) => Promise<void>,
+    guild?: Guild
   ): Promise<number> {
-    const messages = await messageService.fetchUserMessages(
-      channel,
-      userId,
-      () => operationManager.isOperationCancelled(operationId)
-    );
+    let messages: any[] = [];
+
+    const excludeMessageId = options.excludeMessageId;
+
+    switch (options.type) {
+      case 'user':
+        messages = await messageService.fetchUserMessages(
+          channel,
+          options.userId!,
+          () => operationManager.isOperationCancelled(operationId),
+          options.days,
+          excludeMessageId
+        );
+        break;
+      
+      case 'role':
+        messages = await messageService.fetchRoleMessages(
+          channel,
+          options.roleId!,
+          () => operationManager.isOperationCancelled(operationId),
+          options.days,
+          guild,
+          excludeMessageId
+        );
+        break;
+      
+      case 'everyone':
+        messages = await messageService.fetchAllMessages(
+          channel,
+          () => operationManager.isOperationCancelled(operationId),
+          options.days,
+          excludeMessageId
+        );
+        break;
+      
+      case 'inactive':
+        messages = await messageService.fetchInactiveUserMessages(
+          channel,
+          guild || channel.guild,
+          () => operationManager.isOperationCancelled(operationId),
+          options.days,
+          excludeMessageId
+        );
+        break;
+
+      default:
+        messages = await messageService.fetchUserMessages(
+          channel,
+          options.userId!,
+          () => operationManager.isOperationCancelled(operationId),
+          options.days,
+          excludeMessageId
+        );
+    }
 
     if (messages.length === 0) return 0;
 
@@ -182,7 +297,8 @@ export class PurgeService {
             total
           });
         }
-      }
+      },
+      operationId
     );
 
     return deleted;
@@ -190,13 +306,13 @@ export class PurgeService {
 
   private async purgeForumChannel(
     forum: ForumChannel,
-    userId: string,
+    options: PurgeOptions,
     operationId: string,
-    onProgress?: (update: any) => Promise<void>
+    onProgress?: (update: any) => Promise<void>,
+    guild?: Guild
   ): Promise<number> {
     let totalDeleted = 0;
-    
-    // Fetch active threads
+
     const activeThreads = await forum.threads.fetchActive();
     const archivedThreads = await forum.threads.fetchArchived();
     
@@ -210,9 +326,10 @@ export class PurgeService {
       
       const deleted = await this.purgeTextChannel(
         thread,
-        userId,
+        options,
         operationId,
-        onProgress
+        onProgress,
+        guild
       );
       
       totalDeleted += deleted;

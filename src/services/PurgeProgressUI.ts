@@ -1,13 +1,14 @@
 import { 
   ChatInputCommandInteraction,
-  EmbedBuilder,
+  TextDisplayBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  MessageFlags,
+  ContainerBuilder
 } from "discord.js";
 import { CONSTANTS } from "../config/constants";
 import { operationManager } from "./OperationManager";
-import { ResponseBuilder, sendResponse } from "../core/response";
 
 export class PurgeProgressUI {
   async sendInitialProgress(
@@ -17,18 +18,18 @@ export class PurgeProgressUI {
       targetName: string;
       operationId?: string;
     }
-  ): Promise<void> {
-    const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle("🔄 Purge in Progress")
-      .setDescription(`Purging messages from **${data.userName}** in **${data.targetName}**`)
-      .addFields(
-        { name: "Status", value: "Starting purge operation...", inline: false }
-      )
-      .setTimestamp();
-
-    const response = new ResponseBuilder().addEmbed(embed);
+  ): Promise<string | undefined> {
+    const mainContainer = new ContainerBuilder();
     
+    mainContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent(`# 🔄 Purge in Progress\n\nPurging messages from **${data.userName}** in **${data.targetName}**`),
+      new TextDisplayBuilder()
+        .setContent("**Status**\nStarting purge operation...")
+    );
+
+    const components: any[] = [mainContainer];
+
     if (data.operationId) {
       const cancelButton = new ButtonBuilder()
         .setCustomId(`cancel_${data.operationId}`)
@@ -39,11 +40,36 @@ export class PurgeProgressUI {
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(cancelButton);
       
-      response.addComponent(row);
+      components.push(row);
       this.setupCancelCollector(interaction, data.operationId);
     }
 
-    await sendResponse(interaction, response);
+    const payload: any = {
+      components: components,
+      flags: MessageFlags.IsComponentsV2
+    };
+
+    let messageId: string | undefined;
+    try {
+      if (interaction.replied) {
+        await interaction.editReply(payload);
+        const reply = await interaction.fetchReply();
+        messageId = reply.id;
+      } else if (interaction.deferred) {
+        await interaction.editReply(payload);
+        const reply = await interaction.fetchReply();
+        messageId = reply.id;
+      } else {
+        await interaction.reply(payload);
+        const reply = await interaction.fetchReply();
+        messageId = reply.id;
+      }
+    } catch (error) {
+      console.error('Error sending initial progress:', error);
+      messageId = undefined;
+    }
+    
+    return messageId;
   }
 
   async updateProgress(
@@ -52,41 +78,39 @@ export class PurgeProgressUI {
   ): Promise<void> {
     if (!interaction.replied && !interaction.deferred) return;
 
-    const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle("🔄 Purge in Progress")
-      .setDescription(`Purging messages from **${data.userName}** in **${data.targetName}**`)
-      .setTimestamp();
+    if (data.operationId && operationManager.isOperationCancelled(data.operationId)) {
+      return;
+    }
 
-    const fields = [];
-    
+    const mainContainer = new ContainerBuilder();
+
+    mainContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent(`# 🔄 Purge in Progress\n\nPurging messages from **${data.userName}** in **${data.targetName}**`)
+    );
+
     if (data.type === 'channel_start') {
-      fields.push({
-        name: `📁 Processing: ${data.channelName}`,
-        value: "Fetching messages...",
-        inline: false
-      });
+      mainContainer.addTextDisplayComponents(
+        new TextDisplayBuilder()
+          .setContent(`**📁 Processing: ${data.channelName}**\nFetching messages...`)
+      );
     } else if (data.type === 'channel_progress') {
       const percentage = Math.round((data.current / data.total) * 100);
       const progressBar = this.createProgressBar(percentage);
       
-      fields.push({
-        name: `📁 Processing: ${data.channelName}`,
-        value: `${progressBar} ${percentage}% (${data.current}/${data.total})`,
-        inline: false
-      });
+      mainContainer.addTextDisplayComponents(
+        new TextDisplayBuilder()
+          .setContent(`**📁 Processing: ${data.channelName}**\n${progressBar} ${percentage}% (${data.current}/${data.total})`)
+      );
     } else if (data.type === 'channel_complete') {
-      fields.push({
-        name: `✅ Completed: ${data.channelName}`,
-        value: `Deleted ${data.deleted} messages`,
-        inline: false
-      });
+      mainContainer.addTextDisplayComponents(
+        new TextDisplayBuilder()
+          .setContent(`**✅ Completed: ${data.channelName}**\nDeleted ${data.deleted} messages`)
+      );
     }
 
-    embed.addFields(fields);
+    const components: any[] = [mainContainer];
 
-    const response = new ResponseBuilder().addEmbed(embed);
-    
     if (data.operationId) {
       const cancelButton = new ButtonBuilder()
         .setCustomId(`cancel_${data.operationId}`)
@@ -97,10 +121,13 @@ export class PurgeProgressUI {
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(cancelButton);
       
-      response.addComponent(row);
+      components.push(row);
     }
 
-    await interaction.editReply(response.build() as any).catch(() => {});
+    await interaction.editReply({
+      components: components,
+      flags: MessageFlags.IsComponentsV2
+    } as any).catch(() => {});
   }
 
   async sendCompletion(
@@ -113,38 +140,43 @@ export class PurgeProgressUI {
       channels: any[];
     }
   ): Promise<void> {
-    const embed = new EmbedBuilder()
-      .setColor(0x00FF00)
-      .setTitle("✅ Purge Complete")
-      .setDescription(`Successfully purged messages from **${data.userName}** in **${data.targetName}**`)
-      .addFields(
-        { name: "Total Messages Deleted", value: data.totalDeleted.toString(), inline: true },
-        { name: "Duration", value: `${data.duration.toFixed(2)} seconds`, inline: true },
-        { name: "Channels Processed", value: data.channels.length.toString(), inline: true }
-      )
-      .setTimestamp();
+    const mainContainer = new ContainerBuilder();
+    
+    const textComponents = [
+      new TextDisplayBuilder()
+        .setContent(`# ✅ Purge Complete\n\nSuccessfully purged messages from **${data.userName}** in **${data.targetName}**`),
+      new TextDisplayBuilder()
+        .setContent(`**Total Messages Deleted:** ${data.totalDeleted}`),
+      new TextDisplayBuilder()
+        .setContent(`**Duration:** ${data.duration.toFixed(2)} seconds`),
+      new TextDisplayBuilder()
+        .setContent(`**Channels Processed:** ${data.channels.length}`)
+    ];
 
-    if (data.channels.length <= 10) {
+    if (data.channels.length <= 10 && data.channels.some(ch => ch.deleted > 0)) {
       const channelList = data.channels
         .filter(ch => ch.deleted > 0)
         .map(ch => `• ${ch.channelName}: ${ch.deleted} messages`)
         .join("\n");
       
-      if (channelList) {
-        embed.addFields({
-          name: "Channel Breakdown",
-          value: channelList,
-          inline: false
-        });
-      }
+      textComponents.push(
+        new TextDisplayBuilder()
+          .setContent(`\n**Channel Breakdown**\n${channelList}`)
+      );
     }
+    
+    mainContainer.addTextDisplayComponents(...textComponents);
+    
+    const components: any[] = [mainContainer];
 
-    const response = new ResponseBuilder().addEmbed(embed);
-    await interaction.editReply(response.build() as any).catch(() => {});
+    await interaction.editReply({
+      components: components,
+      flags: MessageFlags.IsComponentsV2
+    } as any).catch(() => {});
 
     await interaction.followUp({
       content: `<@${interaction.user.id}> The purge operation has been completed successfully!`,
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     }).catch(() => {});
   }
 
@@ -164,23 +196,29 @@ export class PurgeProgressUI {
       if (i.user.id !== interaction.user.id) {
         await i.reply({
           content: "You cannot cancel this operation.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
         return;
       }
 
       operationManager.cancelOperation(operationId);
+
+      const deletedCount = operationManager.getDeletedCount(operationId);
+
+      const cancelContainer = new ContainerBuilder();
+      const cancelMessage = deletedCount > 0 
+        ? `# ⚠️ Operation Cancelled\n\nThe purge operation has been cancelled by the user.\n\n**Messages deleted before cancellation:** ${deletedCount}`
+        : "# ⚠️ Operation Cancelled\n\nThe purge operation has been cancelled by the user.";
+      
+      cancelContainer.addTextDisplayComponents(
+        new TextDisplayBuilder()
+          .setContent(cancelMessage)
+      );
       
       await i.update({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0xFFA500)
-            .setTitle("⚠️ Operation Cancelled")
-            .setDescription("The purge operation has been cancelled by the user.")
-            .setTimestamp()
-        ],
-        components: []
-      });
+        components: [cancelContainer],
+        flags: MessageFlags.IsComponentsV2
+      } as any);
       
       collector.stop();
     });

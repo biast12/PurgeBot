@@ -3,16 +3,14 @@ import { ValidationResult } from "../types";
 
 export class ValidationService {
   async validateTarget(guild: Guild, targetId: string): Promise<ValidationResult & { targetType?: string }> {
-    // Check if it's the guild itself
     if (targetId === guild.id) {
       return {
         isValid: true,
         targetName: guild.name,
-        targetType: 'guild'
+        targetType: 'server'
       };
     }
 
-    // Check if it's a channel or category
     const channel = guild.channels.cache.get(targetId);
     
     if (!channel) {
@@ -22,9 +20,7 @@ export class ValidationService {
       };
     }
 
-    // Check if it's a category
     if (channel.type === ChannelType.GuildCategory) {
-      // Check if category has any text channels
       const hasTextChannels = guild.channels.cache.some(
         ch => ch.parentId === targetId && this.isTextBasedChannel(ch.type)
       );
@@ -43,7 +39,6 @@ export class ValidationService {
       };
     }
 
-    // Check if it's a text-based channel
     if (this.isTextBasedChannel(channel.type)) {
       return {
         isValid: true,
@@ -59,7 +54,6 @@ export class ValidationService {
   }
 
   validateUserId(userId: string): boolean {
-    // Discord user IDs are snowflakes (numeric strings)
     return /^\d{17,19}$/.test(userId);
   }
 

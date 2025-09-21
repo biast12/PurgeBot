@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Interaction, AutocompleteInteraction } from 'discord.js';
 import { validateConfig, getBotConfig } from './core/config';
 import { CommandManager } from './core/commandManager';
-import { PurgeUserCommand } from './commands/purgeUserCommand';
+import { PurgeCommand } from './commands/purgeCommand';
 import { HelpCommand } from './commands/helpCommand';
 import { sendError } from './core/response';
 import { logger } from './utils/logger';
@@ -35,7 +35,7 @@ export class PurgeBot {
   }
 
   private registerCommands(): void {
-    this.commandManager.register(new PurgeUserCommand());
+    this.commandManager.register(new PurgeCommand());
     this.commandManager.register(new HelpCommand());
   }
 
@@ -103,7 +103,6 @@ export class PurgeBot {
   }
 }
 
-// Start the bot if this file is executed directly
 if (require.main === module) {
   const bot = new PurgeBot();
   bot.start().catch(error => {

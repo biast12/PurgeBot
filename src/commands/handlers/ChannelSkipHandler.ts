@@ -5,7 +5,9 @@ import {
   StringSelectMenuBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
+  TextDisplayBuilder,
+  ContainerBuilder,
+  MessageFlags,
   ChannelType
 } from "discord.js";
 import { CONSTANTS } from "../../config/constants";
@@ -61,20 +63,35 @@ export class ChannelSkipHandler {
     const buttonRow = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(continueButton, cancelButton);
 
-    const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle('Channel Selection')
-      .setDescription(`You selected the category **${categoryName}**.\n\nWould you like to skip any channels during the purge?`)
-      .addFields(
-        { name: 'Total Channels', value: textChannels.length.toString(), inline: true },
-        { name: 'Category', value: categoryName, inline: true }
-      )
-      .setFooter({ text: 'Select channels to skip or click Continue to purge all channels' });
+    const components = [];
+    
+    components.push(
+      new TextDisplayBuilder()
+        .setContent(`# Channel Selection\n\nYou selected the category **${categoryName}**.\n\nWould you like to skip any channels during the purge?`)
+    );
+    
+    components.push(
+      new ContainerBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder()
+            .setContent(`**Total Channels:** ${textChannels.length}`),
+          new TextDisplayBuilder()
+            .setContent(`**Category:** ${categoryName}`)
+        )
+    );
+    
+    components.push(
+      new TextDisplayBuilder()
+        .setContent('_Select channels to skip or click Continue to purge all channels_')
+    );
+    
+    components.push(selectRow);
+    components.push(buttonRow);
 
     await interaction.reply({
-      embeds: [embed],
-      components: [selectRow, buttonRow]
-    });
+      components: components,
+      flags: MessageFlags.IsComponentsV2
+    } as any);
 
     return new Promise((resolve) => {
       let selectedChannels: string[] = [];
@@ -95,41 +112,29 @@ export class ChannelSkipHandler {
           if (i.customId === 'skip_continue') {
             if (selectedChannels.length === textChannels.length) {
               await i.update({
-                embeds: [
-                  new EmbedBuilder()
-                    .setColor(0xFF0000)
-                    .setTitle('❌ Invalid Selection')
-                    .setDescription('You cannot skip all channels in the category.')
+                components: [
+                  new TextDisplayBuilder()
+                    .setContent('# ❌ Invalid Selection\n\nYou cannot skip all channels in the category.')
                 ],
-                components: []
-              });
+                flags: MessageFlags.IsComponentsV2
+              } as any);
               resolved = true;
               collector.stop();
               resolve({ proceed: false });
             } else {
-              await i.update({
-                embeds: [
-                  new EmbedBuilder()
-                    .setColor(0x00FF00)
-                    .setTitle('✅ Selection Confirmed')
-                    .setDescription(`Proceeding with purge. Skipping ${selectedChannels.length} channel(s).`)
-                ],
-                components: []
-              });
+              await i.deferUpdate();
               resolved = true;
               collector.stop();
               resolve({ proceed: true, skippedChannels: selectedChannels });
             }
           } else if (i.customId === 'skip_cancel') {
             await i.update({
-              embeds: [
-                new EmbedBuilder()
-                  .setColor(0xFFA500)
-                  .setTitle('⚠️ Operation Cancelled')
-                  .setDescription('The purge operation has been cancelled.')
+              components: [
+                new TextDisplayBuilder()
+                  .setContent('# ⚠️ Operation Cancelled\n\nThe purge operation has been cancelled.')
               ],
-              components: []
-            });
+              flags: MessageFlags.IsComponentsV2
+            } as any);
             resolved = true;
             collector.stop();
             resolve({ proceed: false });
@@ -140,14 +145,12 @@ export class ChannelSkipHandler {
       collector?.on('end', () => {
         if (!resolved) {
           interaction.editReply({
-            embeds: [
-              new EmbedBuilder()
-                .setColor(0xFFA500)
-                .setTitle('⏱️ Selection Timed Out')
-                .setDescription('The channel selection has timed out.')
+            components: [
+              new TextDisplayBuilder()
+                .setContent('# ⏱️ Selection Timed Out\n\nThe channel selection has timed out.')
             ],
-            components: []
-          }).catch(() => {});
+            flags: MessageFlags.IsComponentsV2
+          } as any).catch(() => {});
           resolve({ proceed: false });
         }
       });

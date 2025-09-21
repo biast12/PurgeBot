@@ -29,12 +29,11 @@ export class RateLimiter {
       try {
         const result = await this.executeWithRetry(item.execute);
         item.resolve(result);
-        this.retryDelay = CONSTANTS.DEFAULT_RETRY_DELAY; // Reset delay on success
+        this.retryDelay = CONSTANTS.DEFAULT_RETRY_DELAY;
       } catch (error) {
         item.reject(error);
       }
-      
-      // Small delay between operations to avoid hitting rate limits
+
       await this.delay(100);
     }
     
@@ -51,10 +50,9 @@ export class RateLimiter {
       if (error.code === ERROR_CODES.RATE_LIMITED && retries < CONSTANTS.MAX_RETRIES) {
         const delay = error.retry_after || this.retryDelay;
         console.warn(`Rate limited. Retrying after ${delay}ms...`);
-        
+
         await this.delay(delay);
-        
-        // Exponential backoff
+
         this.retryDelay = Math.min(this.retryDelay * 2, CONSTANTS.MAX_RETRY_DELAY);
         
         return this.executeWithRetry(fn, retries + 1);

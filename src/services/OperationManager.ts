@@ -43,6 +43,18 @@ export class OperationManager {
     return operation?.cancelled ?? true;
   }
 
+  updateDeletedCount(operationId: string, count: number): void {
+    const operation = this.operations.get(operationId);
+    if (operation) {
+      operation.deletedCount = count;
+    }
+  }
+
+  getDeletedCount(operationId: string): number {
+    const operation = this.operations.get(operationId);
+    return operation?.deletedCount ?? 0;
+  }
+
   completeOperation(operationId: string): void {
     const operation = this.operations.get(operationId);
     if (!operation) return;

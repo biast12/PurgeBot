@@ -5,6 +5,7 @@ import { TextBasedChannel } from "../types";
 import { CONSTANTS, ERROR_CODES } from "../config/constants";
 import { RateLimiter } from "../utils/RateLimiter";
 import { ContentFilter } from "./ContentFilter";
+import { batchOptimizer } from "./BatchOptimizer";
 
 export class MessageService {
   private rateLimiter: RateLimiter;
@@ -292,22 +293,42 @@ export class MessageService {
     operationId?: string
   ): Promise<number> {
     let deleted = 0;
-    const chunkSize = CONSTANTS.BULK_DELETE_CHUNK_SIZE;
-    
+
+    // Update performance metrics
+    const rateLimiterMetrics = this.rateLimiter.getMetrics();
+    batchOptimizer.updatePerformanceMetrics({
+      queueDepth: rateLimiterMetrics.queueLength,
+      activeOperations: rateLimiterMetrics.buckets.length
+    });
+
+    // Get optimal batch size for this channel
+    let chunkSize = batchOptimizer.getOptimalBatchSize(channel.id, messages.length);
+
     for (let i = 0; i < messages.length; i += chunkSize) {
       if (onCancel()) {
         console.log(`Bulk delete cancelled after ${deleted} messages`);
         break;
       }
-      
+
+      // Recalculate optimal size for each batch based on performance
+      if (i > 0) {
+        chunkSize = batchOptimizer.getOptimalBatchSize(channel.id, messages.length - i);
+      }
+
       const chunk = messages.slice(i, i + Math.min(chunkSize, CONSTANTS.BULK_DELETE_LIMIT));
       
+      const startTime = Date.now();
+      let batchSuccess = false;
+      let rateLimitHit = false;
+
       try {
         if ('bulkDelete' in channel) {
           const result = await this.rateLimiter.execute(async () => {
             return await (channel as any).bulkDelete(chunk, true);
           }, `delete_${channel.id}`, 1);
           deleted += result.size;
+          batchSuccess = true;
+
           if (operationId && result.size > 0) {
             const { operationManager } = await import('./OperationManager');
             const currentTotal = operationManager.getDeletedCount(operationId);
@@ -315,10 +336,29 @@ export class MessageService {
           }
         } else {
           deleted += await this.individualDelete(channel, chunk, onCancel, undefined, operationId);
+          batchSuccess = true;
         }
       } catch (error: any) {
         console.error(`Error bulk deleting messages:`, error);
+
+        // Check if it's a rate limit error
+        if (error.code === ERROR_CODES.RATE_LIMITED || error.status === 429) {
+          rateLimitHit = true;
+        }
+
+        // Fall back to individual deletion
         deleted += await this.individualDelete(channel, chunk, onCancel, undefined, operationId);
+        batchSuccess = false;
+      } finally {
+        // Update batch metrics
+        const processingTime = Date.now() - startTime;
+        batchOptimizer.updateBatchMetrics(
+          channel.id,
+          chunk.length,
+          processingTime,
+          batchSuccess,
+          rateLimitHit
+        );
       }
     }
     
@@ -373,6 +413,19 @@ export class MessageService {
 
   public resetRateLimiterMetrics() {
     this.rateLimiter.resetMetrics();
+  }
+
+  // Expose batch optimizer metrics
+  public getBatchOptimizerMetrics() {
+    return batchOptimizer.getMetrics();
+  }
+
+  public resetBatchOptimizerMetrics(channelId?: string) {
+    if (channelId) {
+      batchOptimizer.resetChannelMetrics(channelId);
+    } else {
+      batchOptimizer.resetAllMetrics();
+    }
   }
 }
 

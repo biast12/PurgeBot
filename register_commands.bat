@@ -2,16 +2,16 @@
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 REM ============================================================================
-REM PurgeBot - TypeScript Build Script
-REM Compiles TypeScript source code to JavaScript
+REM PurgeBot - Discord Command Registration
+REM Registers and synchronizes slash commands with Discord API
 REM ============================================================================
 
 REM Set console title for better identification
-TITLE PurgeBot - TypeScript Build
+TITLE PurgeBot - Discord Command Registration
 
 REM Display script header
 ECHO ============================================
-ECHO PurgeBot - TypeScript Build
+ECHO PurgeBot - Discord Command Registration
 ECHO ============================================
 ECHO.
 
@@ -37,45 +37,47 @@ IF NOT EXIST "node_modules" (
     ECHO.
 )
 
-REM Check if tsconfig.json exists
-IF NOT EXIST "tsconfig.json" (
-    ECHO [ERROR] tsconfig.json not found in current directory.
-    ECHO Please ensure TypeScript is properly configured.
+REM Check if .env file exists
+IF NOT EXIST ".env" (
+    ECHO [ERROR] .env file not found.
+    ECHO Please create a .env file with your bot configuration.
+    ECHO You can copy .env.example to .env and modify it.
     PAUSE
     EXIT /B 1
 )
 
-REM Clean existing build if it exists
-IF EXIST "dist" (
-    ECHO [INFO] Cleaning existing build directory...
-    RMDIR /S /Q "dist"
+REM Check if TypeScript build exists
+IF NOT EXIST "dist" (
+    ECHO [WARNING] No dist folder found. Building TypeScript project...
+    npm run build
     IF %ERRORLEVEL% NEQ 0 (
-        ECHO [ERROR] Failed to remove existing dist/ directory
-        ECHO Please check your file permissions.
+        ECHO [ERROR] Failed to build TypeScript project.
         PAUSE
         EXIT /B 1
     )
-    ECHO [INFO] Previous build cleaned.
-    ECHO.
 )
 
-REM Build the TypeScript project
-ECHO [INFO] Building TypeScript project...
-npm run build
+ECHO [INFO] Registering Discord slash commands...
+ECHO ============================================
+ECHO.
 
-REM Check build status
+REM Run the command registration
+npm run register
+
 IF %ERRORLEVEL% EQU 0 (
     ECHO.
     ECHO ============================================
-    ECHO [SUCCESS] Build completed successfully!
+    ECHO [SUCCESS] Registration completed successfully!
     ECHO ============================================
-    ECHO Output directory: %CD%\dist
+    ECHO Commands have been registered with Discord.
+    ECHO.
+    ECHO Note: It may take a few minutes for commands to appear in Discord.
 ) ELSE (
     ECHO.
     ECHO ============================================
-    ECHO [ERROR] Build failed with error code: %ERRORLEVEL%
+    ECHO [ERROR] Registration failed with error code %ERRORLEVEL%
     ECHO ============================================
-    ECHO Please check the console output above for details.
+    ECHO Please check your bot token and environment configuration.
 )
 
 ECHO.

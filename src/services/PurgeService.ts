@@ -1,16 +1,20 @@
-import { 
-  Guild, 
+import {
+  Guild,
   ChannelType,
   ForumChannel
 } from "discord.js";
-import { 
-  PurgeOptions, 
-  PurgeResult, 
+import {
+  PurgeOptions,
+  PurgeResult,
   TextBasedChannel,
   SupportedChannel
 } from "../types";
 import { messageService } from "./MessageService";
 import { operationManager } from "./OperationManager";
+import { ParallelProcessor } from "./ParallelProcessor";
+import { logger } from "../utils/logger";
+import { LogArea } from "../types/logger";
+import { CONSTANTS } from "../config/constants";
 
 export class PurgeService {
   async purgeMessages(
@@ -58,38 +62,95 @@ export class PurgeService {
 
     try {
       const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels || []);
-      
-      for (const channel of channels) {
-        if (operationManager.isOperationCancelled(operationId)) {
-          result.success = false;
-          result.errors.push("Operation was cancelled");
-          break;
-        }
 
-        const wrappedProgress = async (update: any) => {
-          if (update.type === 'channel_complete' && update.deleted) {
-            runningTotal += update.deleted;
+      // Determine if parallel processing should be used
+      const useParallel = channels.length >= CONSTANTS.MIN_CHANNELS_FOR_PARALLEL &&
+                          !options.targetType?.includes('channel');
+
+      if (useParallel) {
+        // Use parallel processor for multiple channels
+        const processor = new ParallelProcessor({
+          maxWorkers: Math.min(CONSTANTS.MAX_PARALLEL_WORKERS, channels.length),
+          maxRetries: CONSTANTS.PARALLEL_RETRY_ATTEMPTS,
+          workerTimeout: CONSTANTS.WORKER_TIMEOUT,
+          priorityBoost: {
+            smallChannels: 20,
+            largeChannels: -10,
+            thresholdMessages: 1000
+          }
+        });
+
+        // Track results from parallel processing
+        const channelResults: Map<string, any> = new Map();
+
+        // Set up event listeners
+        processor.on('channelComplete', async (data: any) => {
+          if (data.result) {
+            channelResults.set(data.channelName, data.result);
+            runningTotal += data.result.deleted || 0;
             operationManager.updateDeletedCount(operationId, runningTotal);
+
+            if (onProgress) {
+              await onProgress({
+                type: 'channel_complete',
+                channelName: data.channelName,
+                deleted: data.result.deleted || 0
+              });
+            }
           }
-          
-          if (onProgress) {
-            await onProgress(update);
+        });
+
+        processor.on('channelError', (data: any) => {
+          logger.error(LogArea.PURGE, `Channel ${data.channelName} failed: ${data.error}`);
+          result.errors.push(`${data.channelName}: ${data.error}`);
+        });
+
+        // Add channels to processor queue
+        processor.addChannels(channels, options, operationId);
+
+        // Start parallel processing
+        await processor.start(async (channel, opts, opId) => {
+          return this.purgeChannel(channel, opts, opId, undefined, guild);
+        });
+
+        // Collect results
+        result.totalDeleted = runningTotal;
+        result.channels = Array.from(channelResults.values());
+
+      } else {
+        // Use sequential processing for single channel or when parallel is not beneficial
+        for (const channel of channels) {
+          if (operationManager.isOperationCancelled(operationId)) {
+            result.success = false;
+            result.errors.push("Operation was cancelled");
+            break;
           }
-        };
 
-        const channelResult = await this.purgeChannel(
-          channel,
-          options,
-          operationId,
-          wrappedProgress,
-          guild
-        );
+          const wrappedProgress = async (update: any) => {
+            if (update.type === 'channel_complete' && update.deleted) {
+              runningTotal += update.deleted;
+              operationManager.updateDeletedCount(operationId, runningTotal);
+            }
 
-        result.totalDeleted += channelResult.deleted;
-        result.channels.push(channelResult);
+            if (onProgress) {
+              await onProgress(update);
+            }
+          };
 
-        if (channelResult.error) {
-          result.errors.push(channelResult.error);
+          const channelResult = await this.purgeChannel(
+            channel,
+            options,
+            operationId,
+            wrappedProgress,
+            guild
+          );
+
+          result.totalDeleted += channelResult.deleted;
+          result.channels.push(channelResult);
+
+          if (channelResult.error) {
+            result.errors.push(channelResult.error);
+          }
         }
       }
     } catch (error: any) {

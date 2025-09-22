@@ -115,7 +115,7 @@ export class HelpCommand extends BaseCommand {
         new ButtonBuilder()
           .setLabel('Support')
           .setStyle(ButtonStyle.Link)
-          .setURL('https://discord.gg/7XPzPxHh7W')
+          .setURL('https://biast12.com/botsupport')
           .setEmoji('❓'),
         new ButtonBuilder()
           .setLabel('GitHub')

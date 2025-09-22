@@ -3,7 +3,7 @@
 > **Effortlessly manage your Discord server's message history with the most powerful and reliable purge bot available.**
 
 [![Invite Bot](https://img.shields.io/badge/Invite-PurgeBot-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1356612233878179921&permissions=74752&integration_type=0&scope=bot)
-[![Support Server](https://img.shields.io/badge/Support-Server-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/7XPzPxHh7W)
+[![Support Server](https://img.shields.io/badge/Support-Server-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://biast12.com/botsupport)
 [![GitHub](https://img.shields.io/badge/Open_Source-GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/biast12/PurgeBot)
 
 ## 🚀 Why Choose PurgeBot?
@@ -128,7 +128,7 @@ PurgeBot respects Discord's permission system:
 
 ## 💬 Need Help?
 
-- **[Join Our Support Server](https://discord.gg/7XPzPxHh7W)** - Get instant help from our team
+- **[Join Our Support Server](https://biast12.com/botsupport)** - Get instant help from our team
 - **[View Documentation](https://github.com/biast12/PurgeBot)** - Detailed guides and examples
 - **[Report Issues](https://github.com/biast12/PurgeBot/issues)** - Help us improve PurgeBot
 
@@ -211,7 +211,7 @@ Don't let message clutter slow down your community. Join thousands of server own
 **PurgeBot** - *Professional Message Management for Discord*
 
 [![License](https://img.shields.io/github/license/biast12/PurgeBot?style=flat-square)](LICENSE)
-[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/7XPzPxHh7W)
+[![Discord](https://img.shields.io/discord/1412752753348055111?style=flat-square&logo=discord&logoColor=white)](https://biast12.com/botsupport)
 [![GitHub Stars](https://img.shields.io/github/stars/biast12/PurgeBot?style=flat-square)](https://github.com/biast12/PurgeBot/stargazers)
 
 </div>

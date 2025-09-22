@@ -29,11 +29,10 @@ export class BatchOptimizer {
     activeOperations: 0
   };
 
-  // Adaptive parameters
-  private readonly targetSuccessRate: number = 0.95; // 95% success rate target
-  private readonly targetResponseTime: number = 1000; // Target 1 second per batch
-  private readonly adjustmentFactor: number = 0.2; // How aggressively to adjust
-  private readonly smoothingFactor: number = 0.3; // For exponential moving average
+  private readonly targetSuccessRate: number = 0.95;
+  private readonly targetResponseTime: number = 1000;
+  private readonly adjustmentFactor: number = 0.2;
+  private readonly smoothingFactor: number = 0.3;
 
   /**
    * Get optimal batch size based on current conditions
@@ -41,30 +40,24 @@ export class BatchOptimizer {
   public getOptimalBatchSize(channelId: string, messageCount?: number): number {
     const metrics = this.batchMetrics.get(channelId) || this.createDefaultMetrics();
 
-    // Start with current batch size
     let optimalSize = this.currentBatchSize;
 
-    // Adjust based on success rate
     const successRate = this.calculateSuccessRate(metrics);
     if (successRate < this.targetSuccessRate) {
-      // Reduce batch size if we're getting errors
       optimalSize = Math.max(
         this.minBatchSize,
         Math.floor(optimalSize * (1 - this.adjustmentFactor))
       );
     }
 
-    // Adjust based on processing time
     if (metrics.averageProcessingTime > 0) {
       const timeRatio = this.targetResponseTime / metrics.averageProcessingTime;
       if (timeRatio > 1.2) {
-        // We can increase batch size
         optimalSize = Math.min(
           this.maxBatchSize,
           Math.ceil(optimalSize * (1 + this.adjustmentFactor * (timeRatio - 1)))
         );
       } else if (timeRatio < 0.8) {
-        // We should decrease batch size
         optimalSize = Math.max(
           this.minBatchSize,
           Math.floor(optimalSize * timeRatio)
@@ -72,11 +65,9 @@ export class BatchOptimizer {
       }
     }
 
-    // Adjust based on rate limit pressure
     if (metrics.rateLimitHits > 0) {
       const rateLimitPressure = metrics.rateLimitHits / Math.max(1, metrics.totalProcessed);
       if (rateLimitPressure > 0.1) {
-        // More than 10% rate limit hits, reduce batch size
         optimalSize = Math.max(
           this.minBatchSize,
           Math.floor(optimalSize * (1 - rateLimitPressure))
@@ -84,21 +75,17 @@ export class BatchOptimizer {
       }
     }
 
-    // Adjust based on server load
     optimalSize = this.adjustForServerLoad(optimalSize);
 
-    // Special handling for small message counts
     if (messageCount && messageCount < optimalSize) {
       optimalSize = messageCount;
     }
 
-    // Apply smoothing to avoid drastic changes
     const smoothedSize = Math.round(
       this.currentBatchSize * (1 - this.smoothingFactor) +
       optimalSize * this.smoothingFactor
     );
 
-    // Ensure we stay within bounds
     const finalSize = Math.max(this.minBatchSize, Math.min(this.maxBatchSize, smoothedSize));
 
     this.currentBatchSize = finalSize;
@@ -128,7 +115,6 @@ export class BatchOptimizer {
       metrics.rateLimitHits++;
     }
 
-    // Update average processing time (exponential moving average)
     if (metrics.averageProcessingTime === 0) {
       metrics.averageProcessingTime = processingTime;
     } else {
@@ -137,13 +123,11 @@ export class BatchOptimizer {
         processingTime * this.smoothingFactor;
     }
 
-    // Update last batch info
     metrics.lastBatchSize = batchSize;
     metrics.lastBatchTime = Date.now();
 
     this.batchMetrics.set(channelId, metrics);
 
-    // Update network latency estimate
     this.updateNetworkLatency(processingTime, batchSize);
   }
 

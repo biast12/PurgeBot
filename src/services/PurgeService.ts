@@ -63,12 +63,10 @@ export class PurgeService {
     try {
       const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels || []);
 
-      // Determine if parallel processing should be used
       const useParallel = channels.length >= CONSTANTS.MIN_CHANNELS_FOR_PARALLEL &&
                           !options.targetType?.includes('channel');
 
       if (useParallel) {
-        // Use parallel processor for multiple channels
         const processor = new ParallelProcessor({
           maxWorkers: Math.min(CONSTANTS.MAX_PARALLEL_WORKERS, channels.length),
           maxRetries: CONSTANTS.PARALLEL_RETRY_ATTEMPTS,
@@ -80,10 +78,8 @@ export class PurgeService {
           }
         });
 
-        // Track results from parallel processing
         const channelResults: Map<string, any> = new Map();
 
-        // Set up event listeners
         processor.on('channelComplete', async (data: any) => {
           if (data.result) {
             channelResults.set(data.channelName, data.result);
@@ -105,7 +101,6 @@ export class PurgeService {
           result.errors.push(`${data.channelName}: ${data.error}`);
         });
 
-        // Add channels to processor queue
         processor.addChannels(channels, options, operationId);
 
         // Start parallel processing

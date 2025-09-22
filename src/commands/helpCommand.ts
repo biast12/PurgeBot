@@ -27,7 +27,6 @@ export class HelpCommand extends BaseCommand {
 
     const response = new ResponseBuilder();
 
-    // Main header with intro
     response.addComponent(
       new TextDisplayBuilder()
         .setContent('# 📚 PurgeBot\n\nPowerful message management for Discord servers.')
@@ -39,7 +38,6 @@ export class HelpCommand extends BaseCommand {
         .setDivider(true)
     );
 
-    // Commands overview in a compact container
     response.addComponent(
       new ContainerBuilder()
         .addTextDisplayComponents(
@@ -56,7 +54,6 @@ export class HelpCommand extends BaseCommand {
         )
     );
 
-    // Common parameters in a single container
     response.addComponent(
       new ContainerBuilder()
         .addTextDisplayComponents(
@@ -72,7 +69,6 @@ export class HelpCommand extends BaseCommand {
         )
     );
 
-    // New content filtering section
     response.addComponent(
       new ContainerBuilder()
         .addTextDisplayComponents(
@@ -94,7 +90,6 @@ export class HelpCommand extends BaseCommand {
         .setDivider(true)
     );
 
-    // Compact tips and requirements
     response.addComponent(
       new ContainerBuilder()
         .addTextDisplayComponents(
@@ -110,7 +105,6 @@ export class HelpCommand extends BaseCommand {
         )
     );
 
-    // Action buttons
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
         new ButtonBuilder()

@@ -142,15 +142,12 @@ export class PredictiveThrottler {
   public getPreemptiveDelay(bucket: string): number {
     const prediction = this.predictRateLimit(bucket);
 
-    // If we have high confidence we'll hit the limit soon, start throttling
     if (prediction.confidence > 0.7 && prediction.timeToLimit < this.predictionWindow) {
       const urgency = 1 - (prediction.timeToLimit / this.predictionWindow);
       const baseDelay = prediction.recommendedDelay;
 
-      // Scale delay based on urgency
       const scaledDelay = baseDelay * (1 + urgency);
 
-      // Log prediction
       if (scaledDelay > 100) {
         logger.info(LogArea.API,
           `Predictive throttling for ${bucket}: ${scaledDelay}ms delay ` +

@@ -321,7 +321,6 @@ export class PurgeCommand extends BaseCommand {
       return;
     }
 
-    // Check bot permissions
     const botMember = guild.members.me;
     if (!botMember) {
       await sendError(interaction, 'Could not verify bot permissions.');
@@ -378,10 +377,8 @@ export class PurgeCommand extends BaseCommand {
     const filterModeStr = interaction.options.getString('filter_mode');
     const caseSensitive = interaction.options.getBoolean('case_sensitive') || false;
 
-    // Determine filter mode
     let mode: FilterMode;
     if (filterModeStr) {
-      // User explicitly specified the mode
       switch (filterModeStr) {
         case 'regex':
           mode = FilterMode.REGEX;
@@ -401,8 +398,6 @@ export class PurgeCommand extends BaseCommand {
           break;
       }
     } else {
-      // Auto-detect: if it looks like regex, treat it as regex, otherwise as contains
-      // Simple heuristic: if it contains regex metacharacters, treat as regex
       const regexChars = /[.*+?^${}()|[\]\\]/;
       if (regexChars.test(filter)) {
         mode = FilterMode.REGEX;
@@ -411,7 +406,6 @@ export class PurgeCommand extends BaseCommand {
       }
     }
 
-    // Validate regex if using regex mode
     if (mode === FilterMode.REGEX) {
       const validation = ContentFilter.validateRegex(filter);
       if (!validation.valid) {
@@ -436,7 +430,6 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
 
-    // Create content filter if specified
     let contentFilter: ContentFilter | undefined;
     try {
       contentFilter = this.createContentFilter(interaction);
@@ -489,7 +482,6 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
 
-    // Create content filter if specified
     let contentFilter: ContentFilter | undefined;
     try {
       contentFilter = this.createContentFilter(interaction);
@@ -548,7 +540,6 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
 
-    // Create content filter if specified
     let contentFilter: ContentFilter | undefined;
     try {
       contentFilter = this.createContentFilter(interaction);
@@ -598,7 +589,6 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
 
-    // Create content filter if specified
     let contentFilter: ContentFilter | undefined;
     try {
       contentFilter = this.createContentFilter(interaction);
@@ -644,7 +634,6 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
 
-    // Create content filter if specified
     let contentFilter: ContentFilter | undefined;
     try {
       contentFilter = this.createContentFilter(interaction);

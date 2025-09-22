@@ -32,13 +32,12 @@ interface RateLimitState {
 export class RateLimiter {
   private queue: QueueItem<any>[] = [];
   private processing = false;
-  private baseDelay: number = 100; // Base delay between requests
+  private baseDelay: number = 100;
   private currentDelay: number = 100;
   private rateLimitState: RateLimitState = {};
   private globalRateLimitReset?: number;
   private dynamicDelayMultiplier: number = 1.0;
 
-  // Performance metrics
   private metrics = {
     totalRequests: 0,
     rateLimitHits: 0,
@@ -64,7 +63,6 @@ export class RateLimiter {
     return new Promise((resolve, reject) => {
       const item = { execute: fn, resolve, reject, priority };
 
-      // Insert based on priority
       if (priority > 0) {
         const insertIndex = this.queue.findIndex(i => (i.priority || 0) < priority);
         if (insertIndex === -1) {
@@ -86,7 +84,6 @@ export class RateLimiter {
     this.processing = true;
 
     while (this.queue.length > 0) {
-      // Check if we should wait for global rate limit
       if (this.globalRateLimitReset && Date.now() < this.globalRateLimitReset) {
         const waitTime = this.globalRateLimitReset - Date.now();
         logger.info(LogArea.API, `Waiting ${waitTime}ms for global rate limit reset`);
@@ -94,7 +91,6 @@ export class RateLimiter {
         this.globalRateLimitReset = undefined;
       }
 
-      // Check bucket-specific rate limits
       const bucketState = this.rateLimitState[bucket];
       if (bucketState) {
         if (bucketState.remaining === 0 && Date.now() < bucketState.reset) {
@@ -104,7 +100,6 @@ export class RateLimiter {
         }
       }
 
-      // Apply predictive throttling
       const predictiveDelay = predictiveThrottler.getPreemptiveDelay(bucket);
       if (predictiveDelay > 0) {
         await this.delay(predictiveDelay);
@@ -116,13 +111,11 @@ export class RateLimiter {
       try {
         const result = await this.executeWithDynamicRetry(item.execute, bucket);
 
-        // Update metrics
         this.metrics.totalRequests++;
         this.metrics.successfulRequests++;
         const responseTime = Date.now() - startTime;
         this.updateBucketMetrics(bucket, responseTime);
 
-        // Record request for predictive analysis
         const bucketState = this.rateLimitState[bucket];
         if (bucketState) {
           predictiveThrottler.recordRequest(
@@ -137,7 +130,6 @@ export class RateLimiter {
 
         item.resolve(result);
 
-        // Adjust delay based on current rate limit state
         this.adjustDynamicDelay(bucket);
 
       } catch (error) {
@@ -145,7 +137,6 @@ export class RateLimiter {
         item.reject(error);
       }
 
-      // Apply dynamic delay
       await this.delay(this.currentDelay);
     }
 
@@ -160,14 +151,12 @@ export class RateLimiter {
     try {
       const result = await fn();
 
-      // Try to extract rate limit info from response headers if available
       if (result && typeof result === 'object' && 'headers' in (result as any)) {
         this.updateRateLimitInfo(bucket, (result as any).headers);
       }
 
       return result;
     } catch (error: any) {
-      // Handle rate limit errors
       if (error.code === ERROR_CODES.RATE_LIMITED || error.status === 429) {
         this.metrics.rateLimitHits++;
 
@@ -181,7 +170,6 @@ export class RateLimiter {
             logger.warning(LogArea.API, `Rate limited on bucket ${bucket}. Waiting ${retryAfter}ms`);
           }
 
-          // Increase delay multiplier when hitting rate limits
           this.dynamicDelayMultiplier = Math.min(this.dynamicDelayMultiplier * 1.5, 10);
 
           await this.delay(retryAfter);
@@ -198,7 +186,6 @@ export class RateLimiter {
 
     const info: Partial<RateLimitInfo> = {};
 
-    // Parse Discord rate limit headers
     if (headers['x-ratelimit-limit']) {
       info.limit = parseInt(headers['x-ratelimit-limit']);
     }
@@ -215,7 +202,6 @@ export class RateLimiter {
       info.bucket = headers['x-ratelimit-bucket'];
     }
 
-    // Update bucket state
     if (info.limit !== undefined) {
       const actualBucket = info.bucket || bucket;
       this.rateLimitState[actualBucket] = {
@@ -227,7 +213,6 @@ export class RateLimiter {
         requestCount: (this.rateLimitState[actualBucket]?.requestCount || 0) + 1
       };
 
-      // Update predictive throttler with new rate limit info
       predictiveThrottler.recordRequest(
         actualBucket,
         0, // Response time will be updated elsewhere
@@ -235,7 +220,6 @@ export class RateLimiter {
         info.reset || (Date.now() + (info.resetAfter || 60000))
       );
 
-      // Log current state for debugging
       if (this.options.enableMetrics) {
         logger.info(LogArea.API,
           `Bucket ${actualBucket}: ${info.remaining}/${info.limit} remaining, resets in ${info.resetAfter}ms`
@@ -271,7 +255,6 @@ export class RateLimiter {
       return;
     }
 
-    // Calculate optimal delay based on rate limit state
     const { limit, remaining, reset } = bucketState;
 
     if (limit > 0) {
@@ -279,17 +262,13 @@ export class RateLimiter {
       const remainingRatio = remaining / limit;
 
       if (remainingRatio < 0.2) {
-        // Less than 20% remaining, slow down significantly
         this.dynamicDelayMultiplier = Math.min(this.dynamicDelayMultiplier * 2, 10);
       } else if (remainingRatio < 0.5) {
-        // Less than 50% remaining, slow down moderately
         this.dynamicDelayMultiplier = Math.min(this.dynamicDelayMultiplier * 1.2, 5);
       } else if (remainingRatio > 0.8 && this.dynamicDelayMultiplier > 1) {
-        // More than 80% remaining, can speed up
         this.dynamicDelayMultiplier = Math.max(this.dynamicDelayMultiplier * 0.9, 1);
       }
 
-      // Calculate delay to spread remaining requests over time until reset
       if (remaining > 0 && timeUntilReset > 0) {
         const optimalDelay = Math.max(
           this.baseDelay,
@@ -303,11 +282,9 @@ export class RateLimiter {
         this.currentDelay = Math.floor(this.baseDelay * this.dynamicDelayMultiplier);
       }
     } else {
-      // No rate limit info, use base delay with multiplier
       this.currentDelay = Math.floor(this.baseDelay * this.dynamicDelayMultiplier);
     }
 
-    // Log delay adjustment for debugging
     if (this.options.enableMetrics) {
       logger.info(LogArea.API,
         `Adjusted delay to ${this.currentDelay}ms (multiplier: ${this.dynamicDelayMultiplier.toFixed(2)})`
@@ -326,7 +303,6 @@ export class RateLimiter {
       return error.response.data.retry_after * 1000;
     }
 
-    // Default exponential backoff
     return Math.min(
       CONSTANTS.DEFAULT_RETRY_DELAY * Math.pow(2, this.metrics.rateLimitHits),
       CONSTANTS.MAX_RETRY_DELAY
@@ -337,7 +313,6 @@ export class RateLimiter {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // Public methods for monitoring
   public getMetrics() {
     return {
       ...this.metrics,
@@ -367,7 +342,6 @@ export class RateLimiter {
     this.queue = [];
   }
 
-  // Expose predictive throttler metrics
   public getPredictiveMetrics() {
     return predictiveThrottler.getMetrics();
   }

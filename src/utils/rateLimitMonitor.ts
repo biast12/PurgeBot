@@ -30,18 +30,15 @@ export class RateLimitMonitor {
   private logMetrics(): void {
     const metrics = messageService.getRateLimiterMetrics();
 
-    // Store in history
     this.metricsHistory.push({
       timestamp: Date.now(),
       ...metrics
     });
 
-    // Trim history
     if (this.metricsHistory.length > this.maxHistorySize) {
       this.metricsHistory.shift();
     }
 
-    // Log significant events
     if (metrics.rateLimitHits > 0) {
       logger.warning(LogArea.API,
         `Rate limit status: ${metrics.rateLimitHits} hits, ` +
@@ -50,7 +47,6 @@ export class RateLimitMonitor {
       );
     }
 
-    // Log bucket status
     if (metrics.buckets && metrics.buckets.length > 0) {
       for (const bucket of metrics.buckets) {
         if (bucket.remaining < bucket.limit * 0.2) {
@@ -78,7 +74,6 @@ export class RateLimitMonitor {
       return current;
     }
 
-    // Calculate averages from history
     const avgDelay = history.reduce((sum, m) => sum + m.currentDelay, 0) / history.length;
     const avgMultiplier = history.reduce((sum, m) => sum + m.dynamicDelayMultiplier, 0) / history.length;
     const totalRateLimitHits = history.reduce((sum, m) => sum + (m.rateLimitHits || 0), 0);

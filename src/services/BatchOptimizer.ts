@@ -1,5 +1,3 @@
-import { logger } from "../utils/logger";
-import { LogArea } from "../types/logger";
 import { CONSTANTS } from "../config/constants";
 
 export interface BatchMetrics {
@@ -102,14 +100,6 @@ export class BatchOptimizer {
 
     // Ensure we stay within bounds
     const finalSize = Math.max(this.minBatchSize, Math.min(this.maxBatchSize, smoothedSize));
-
-    // Log significant changes
-    if (Math.abs(finalSize - this.currentBatchSize) > 10) {
-      logger.info(LogArea.API,
-        `Batch size adjusted from ${this.currentBatchSize} to ${finalSize} ` +
-        `(success rate: ${(successRate * 100).toFixed(1)}%, avg time: ${metrics.averageProcessingTime}ms)`
-      );
-    }
 
     this.currentBatchSize = finalSize;
     return finalSize;

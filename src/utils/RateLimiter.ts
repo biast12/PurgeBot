@@ -1,6 +1,7 @@
 import { CONSTANTS, ERROR_CODES } from "../config/constants";
 import { logger } from "./logger";
 import { LogArea } from "../types/logger";
+import { predictiveThrottler } from "../services/PredictiveThrottler";
 
 interface QueueItem<T> {
   execute: () => Promise<T>;
@@ -103,6 +104,12 @@ export class RateLimiter {
         }
       }
 
+      // Apply predictive throttling
+      const predictiveDelay = predictiveThrottler.getPreemptiveDelay(bucket);
+      if (predictiveDelay > 0) {
+        await this.delay(predictiveDelay);
+      }
+
       const item = this.queue.shift()!;
       const startTime = Date.now();
 
@@ -114,6 +121,19 @@ export class RateLimiter {
         this.metrics.successfulRequests++;
         const responseTime = Date.now() - startTime;
         this.updateBucketMetrics(bucket, responseTime);
+
+        // Record request for predictive analysis
+        const bucketState = this.rateLimitState[bucket];
+        if (bucketState) {
+          predictiveThrottler.recordRequest(
+            bucket,
+            responseTime,
+            bucketState.remaining,
+            bucketState.reset
+          );
+        } else {
+          predictiveThrottler.recordRequest(bucket, responseTime);
+        }
 
         item.resolve(result);
 
@@ -206,6 +226,14 @@ export class RateLimiter {
         averageResponseTime: this.rateLimitState[actualBucket]?.averageResponseTime || 0,
         requestCount: (this.rateLimitState[actualBucket]?.requestCount || 0) + 1
       };
+
+      // Update predictive throttler with new rate limit info
+      predictiveThrottler.recordRequest(
+        actualBucket,
+        0, // Response time will be updated elsewhere
+        info.remaining,
+        info.reset || (Date.now() + (info.resetAfter || 60000))
+      );
 
       // Log current state for debugging
       if (this.options.enableMetrics) {
@@ -318,7 +346,8 @@ export class RateLimiter {
       queueLength: this.queue.length,
       buckets: Object.keys(this.rateLimitState).map(bucket => ({
         name: bucket,
-        ...this.rateLimitState[bucket]
+        ...this.rateLimitState[bucket],
+        prediction: predictiveThrottler.predictRateLimit(bucket)
       }))
     };
   }
@@ -331,9 +360,15 @@ export class RateLimiter {
       successfulRequests: 0,
       failedRequests: 0
     };
+    predictiveThrottler.clearAllHistory();
   }
 
   public clearQueue(): void {
     this.queue = [];
+  }
+
+  // Expose predictive throttler metrics
+  public getPredictiveMetrics() {
+    return predictiveThrottler.getMetrics();
   }
 }

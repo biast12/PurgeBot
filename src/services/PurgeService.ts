@@ -57,7 +57,7 @@ export class PurgeService {
     let runningTotal = 0;
 
     try {
-      const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels);
+      const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels || []);
       
       for (const channel of channels) {
         if (operationManager.isOperationCancelled(operationId)) {
@@ -238,10 +238,11 @@ export class PurgeService {
           options.userId!,
           () => operationManager.isOperationCancelled(operationId),
           options.days,
-          excludeMessageId
+          excludeMessageId,
+          options.contentFilter
         );
         break;
-      
+
       case 'role':
         messages = await messageService.fetchRoleMessages(
           channel,
@@ -249,26 +250,29 @@ export class PurgeService {
           () => operationManager.isOperationCancelled(operationId),
           options.days,
           guild,
-          excludeMessageId
+          excludeMessageId,
+          options.contentFilter
         );
         break;
-      
+
       case 'everyone':
         messages = await messageService.fetchAllMessages(
           channel,
           () => operationManager.isOperationCancelled(operationId),
           options.days,
-          excludeMessageId
+          excludeMessageId,
+          options.contentFilter
         );
         break;
-      
+
       case 'inactive':
         messages = await messageService.fetchInactiveUserMessages(
           channel,
           guild || channel.guild,
           () => operationManager.isOperationCancelled(operationId),
           options.days,
-          excludeMessageId
+          excludeMessageId,
+          options.contentFilter
         );
         break;
 
@@ -278,7 +282,8 @@ export class PurgeService {
           options.userId!,
           () => operationManager.isOperationCancelled(operationId),
           options.days,
-          excludeMessageId
+          excludeMessageId,
+          options.contentFilter
         );
     }
 

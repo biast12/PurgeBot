@@ -10,6 +10,7 @@ import { AutocompleteService } from './services/AutocompleteService';
 import { logger } from '../utils/logger';
 import { LogArea } from '../types/logger';
 import { PurgeProgressUI } from '../services/PurgeProgressUI';
+import { ContentFilter, FilterMode } from '../services/ContentFilter';
 
 export class PurgeCommand extends BaseCommand {
   public readonly name = 'purge';
@@ -57,6 +58,31 @@ export class PurgeCommand extends BaseCommand {
               .setMinValue(1)
               .setMaxValue(30)
           )
+          .addStringOption(option =>
+            option
+              .setName('filter')
+              .setDescription('Only delete messages matching this filter (text or regex)')
+              .setRequired(false)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter_mode')
+              .setDescription('How to interpret the filter')
+              .setRequired(false)
+              .addChoices(
+                { name: 'Contains text', value: 'contains' },
+                { name: 'Regex pattern', value: 'regex' },
+                { name: 'Exact match', value: 'exact' },
+                { name: 'Starts with', value: 'starts_with' },
+                { name: 'Ends with', value: 'ends_with' }
+              )
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('case_sensitive')
+              .setDescription('Make filter case-sensitive (default: false)')
+              .setRequired(false)
+          )
           .addBooleanOption(option =>
             option
               .setName('skip_channels')
@@ -89,6 +115,31 @@ export class PurgeCommand extends BaseCommand {
               .setMinValue(1)
               .setMaxValue(30)
           )
+          .addStringOption(option =>
+            option
+              .setName('filter')
+              .setDescription('Only delete messages matching this filter (text or regex)')
+              .setRequired(false)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter_mode')
+              .setDescription('How to interpret the filter')
+              .setRequired(false)
+              .addChoices(
+                { name: 'Contains text', value: 'contains' },
+                { name: 'Regex pattern', value: 'regex' },
+                { name: 'Exact match', value: 'exact' },
+                { name: 'Starts with', value: 'starts_with' },
+                { name: 'Ends with', value: 'ends_with' }
+              )
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('case_sensitive')
+              .setDescription('Make filter case-sensitive (default: false)')
+              .setRequired(false)
+          )
           .addBooleanOption(option =>
             option
               .setName('skip_channels')
@@ -114,6 +165,31 @@ export class PurgeCommand extends BaseCommand {
               .setRequired(false)
               .setMinValue(1)
               .setMaxValue(30)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter')
+              .setDescription('Only delete messages matching this filter (text or regex)')
+              .setRequired(false)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter_mode')
+              .setDescription('How to interpret the filter')
+              .setRequired(false)
+              .addChoices(
+                { name: 'Contains text', value: 'contains' },
+                { name: 'Regex pattern', value: 'regex' },
+                { name: 'Exact match', value: 'exact' },
+                { name: 'Starts with', value: 'starts_with' },
+                { name: 'Ends with', value: 'ends_with' }
+              )
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('case_sensitive')
+              .setDescription('Make filter case-sensitive (default: false)')
+              .setRequired(false)
           )
           .addBooleanOption(option =>
             option
@@ -141,6 +217,31 @@ export class PurgeCommand extends BaseCommand {
               .setMinValue(1)
               .setMaxValue(30)
           )
+          .addStringOption(option =>
+            option
+              .setName('filter')
+              .setDescription('Only delete messages matching this filter (text or regex)')
+              .setRequired(false)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter_mode')
+              .setDescription('How to interpret the filter')
+              .setRequired(false)
+              .addChoices(
+                { name: 'Contains text', value: 'contains' },
+                { name: 'Regex pattern', value: 'regex' },
+                { name: 'Exact match', value: 'exact' },
+                { name: 'Starts with', value: 'starts_with' },
+                { name: 'Ends with', value: 'ends_with' }
+              )
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('case_sensitive')
+              .setDescription('Make filter case-sensitive (default: false)')
+              .setRequired(false)
+          )
           .addBooleanOption(option =>
             option
               .setName('skip_channels')
@@ -166,6 +267,31 @@ export class PurgeCommand extends BaseCommand {
               .setRequired(false)
               .setMinValue(1)
               .setMaxValue(30)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter')
+              .setDescription('Only delete messages matching this filter (text or regex)')
+              .setRequired(false)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter_mode')
+              .setDescription('How to interpret the filter')
+              .setRequired(false)
+              .addChoices(
+                { name: 'Contains text', value: 'contains' },
+                { name: 'Regex pattern', value: 'regex' },
+                { name: 'Exact match', value: 'exact' },
+                { name: 'Starts with', value: 'starts_with' },
+                { name: 'Ends with', value: 'ends_with' }
+              )
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('case_sensitive')
+              .setDescription('Make filter case-sensitive (default: false)')
+              .setRequired(false)
           )
           .addBooleanOption(option =>
             option
@@ -245,21 +371,92 @@ export class PurgeCommand extends BaseCommand {
     }
   }
 
+  private createContentFilter(interaction: any): ContentFilter | undefined {
+    const filter = interaction.options.getString('filter');
+    if (!filter) return undefined;
+
+    const filterModeStr = interaction.options.getString('filter_mode');
+    const caseSensitive = interaction.options.getBoolean('case_sensitive') || false;
+
+    // Determine filter mode
+    let mode: FilterMode;
+    if (filterModeStr) {
+      // User explicitly specified the mode
+      switch (filterModeStr) {
+        case 'regex':
+          mode = FilterMode.REGEX;
+          break;
+        case 'exact':
+          mode = FilterMode.EXACT;
+          break;
+        case 'starts_with':
+          mode = FilterMode.STARTS_WITH;
+          break;
+        case 'ends_with':
+          mode = FilterMode.ENDS_WITH;
+          break;
+        case 'contains':
+        default:
+          mode = FilterMode.CONTAINS;
+          break;
+      }
+    } else {
+      // Auto-detect: if it looks like regex, treat it as regex, otherwise as contains
+      // Simple heuristic: if it contains regex metacharacters, treat as regex
+      const regexChars = /[.*+?^${}()|[\]\\]/;
+      if (regexChars.test(filter)) {
+        mode = FilterMode.REGEX;
+      } else {
+        mode = FilterMode.CONTAINS;
+      }
+    }
+
+    // Validate regex if using regex mode
+    if (mode === FilterMode.REGEX) {
+      const validation = ContentFilter.validateRegex(filter);
+      if (!validation.valid) {
+        throw new Error(`Invalid regex pattern: ${validation.error}`);
+      }
+    }
+
+    return new ContentFilter({
+      pattern: filter,
+      mode,
+      caseSensitive
+    });
+  }
+
   private async handleUserPurge(context: CommandContext): Promise<void> {
     const { interaction } = context;
     const guild = interaction.guild!;
-    
+
     const targetId = interaction.options.getString('target_id', true);
     const user = interaction.options.getUser('user', true);
     const userId = user.id;
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
 
+    // Create content filter if specified
+    let contentFilter: ContentFilter | undefined;
+    try {
+      contentFilter = this.createContentFilter(interaction);
+    } catch (error: any) {
+      await sendError(interaction, error.message);
+      return;
+    }
+
     const validation = await this.validationService.validateTarget(guild, targetId);
     if (!validation.isValid) {
       await sendError(interaction, validation.error || 'The specified target is not valid.');
       return;
     }
+
+    const purgeOptions = {
+      type: 'user' as const,
+      userId,
+      days,
+      contentFilter
+    };
 
     if (skipChannels && validation.targetType === 'category') {
       const skipResult = await this.channelSkipHandler.handle(
@@ -268,35 +465,52 @@ export class PurgeCommand extends BaseCommand {
         targetId,
         validation.targetName!
       );
-      
+
       if (!skipResult.proceed) return;
-      
+
       await this.startPurge(
         context,
         guild,
         targetId,
-        { type: 'user', userId, days },
+        purgeOptions,
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'user', userId, days }, []);
+      await this.startPurge(context, guild, targetId, purgeOptions, []);
     }
   }
 
   private async handleRolePurge(context: CommandContext): Promise<void> {
     const { interaction } = context;
     const guild = interaction.guild!;
-    
+
     const targetId = interaction.options.getString('target_id', true);
     const role = interaction.options.getRole('role', true);
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+
+    // Create content filter if specified
+    let contentFilter: ContentFilter | undefined;
+    try {
+      contentFilter = this.createContentFilter(interaction);
+    } catch (error: any) {
+      await sendError(interaction, error.message);
+      return;
+    }
 
     const validation = await this.validationService.validateTarget(guild, targetId);
     if (!validation.isValid) {
       await sendError(interaction, validation.error || 'The specified target is not valid.');
       return;
     }
+
+    const purgeOptions = {
+      type: 'role' as const,
+      roleId: role.id,
+      roleName: role.name,
+      days,
+      contentFilter
+    };
 
     if (skipChannels && validation.targetType === 'category') {
       const skipResult = await this.channelSkipHandler.handle(
@@ -305,22 +519,22 @@ export class PurgeCommand extends BaseCommand {
         targetId,
         validation.targetName!
       );
-      
+
       if (!skipResult.proceed) return;
-      
+
       await this.startPurge(
         context,
         guild,
         targetId,
-        { type: 'role', roleId: role.id, roleName: role.name, days },
+        purgeOptions,
         skipResult.skippedChannels || []
       );
     } else {
       await this.startPurge(
-        context, 
-        guild, 
-        targetId, 
-        { type: 'role', roleId: role.id, roleName: role.name, days }, 
+        context,
+        guild,
+        targetId,
+        purgeOptions,
         []
       );
     }
@@ -329,10 +543,20 @@ export class PurgeCommand extends BaseCommand {
   private async handleEveryonePurge(context: CommandContext): Promise<void> {
     const { interaction } = context;
     const guild = interaction.guild!;
-    
+
     const targetId = interaction.options.getString('target_id', true);
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+
+    // Create content filter if specified
+    let contentFilter: ContentFilter | undefined;
+    try {
+      contentFilter = this.createContentFilter(interaction);
+    } catch (error: any) {
+      await sendError(interaction, error.message);
+      return;
+    }
+
     if (targetId === guild.id) {
       await sendError(interaction, 'Server-wide purge of all messages is not allowed for safety. Please select a specific category or channel.');
       return;
@@ -358,21 +582,30 @@ export class PurgeCommand extends BaseCommand {
         context,
         guild,
         targetId,
-        { type: 'everyone', days },
+        { type: 'everyone', days, contentFilter },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'everyone', days }, []);
+      await this.startPurge(context, guild, targetId, { type: 'everyone', days, contentFilter }, []);
     }
   }
 
   private async handleInactivePurge(context: CommandContext): Promise<void> {
     const { interaction } = context;
     const guild = interaction.guild!;
-    
+
     const targetId = interaction.options.getString('target_id', true);
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+
+    // Create content filter if specified
+    let contentFilter: ContentFilter | undefined;
+    try {
+      contentFilter = this.createContentFilter(interaction);
+    } catch (error: any) {
+      await sendError(interaction, error.message);
+      return;
+    }
 
     const validation = await this.validationService.validateTarget(guild, targetId);
     if (!validation.isValid) {
@@ -394,22 +627,31 @@ export class PurgeCommand extends BaseCommand {
         context,
         guild,
         targetId,
-        { type: 'inactive', days },
+        { type: 'inactive', days, contentFilter },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'inactive', days }, []);
+      await this.startPurge(context, guild, targetId, { type: 'inactive', days, contentFilter }, []);
     }
   }
 
   private async handleDeletedPurge(context: CommandContext): Promise<void> {
     const { interaction } = context;
     const guild = interaction.guild!;
-    
+
     const targetId = interaction.options.getString('target_id', true);
     const userId = '456226577798135808';
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+
+    // Create content filter if specified
+    let contentFilter: ContentFilter | undefined;
+    try {
+      contentFilter = this.createContentFilter(interaction);
+    } catch (error: any) {
+      await sendError(interaction, error.message);
+      return;
+    }
 
     const validation = await this.validationService.validateTarget(guild, targetId);
     if (!validation.isValid) {
@@ -424,18 +666,18 @@ export class PurgeCommand extends BaseCommand {
         targetId,
         validation.targetName!
       );
-      
+
       if (!skipResult.proceed) return;
-      
+
       await this.startPurge(
         context,
         guild,
         targetId,
-        { type: 'user', userId, days },
+        { type: 'user', userId, days, contentFilter },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'user', userId, days }, []);
+      await this.startPurge(context, guild, targetId, { type: 'user', userId, days, contentFilter }, []);
     }
   }
 
@@ -555,7 +797,7 @@ export class PurgeCommand extends BaseCommand {
   public async handleAutocomplete(context: AutocompleteContext): Promise<void> {
     const { interaction } = context;
     const focusedOption = interaction.options.getFocused(true);
-    
+
     if (focusedOption.name === 'target_id') {
       const subcommand = interaction.options.getSubcommand();
       const excludeServer = subcommand === 'everyone';

@@ -20,6 +20,7 @@ export enum LogArea {
   STARTUP = 'STARTUP',
   SHUTDOWN = 'SHUTDOWN',
   PURGE = 'PURGE',
+  SERVICES = 'SERVICES',
   NONE = 'NONE'
 }
 

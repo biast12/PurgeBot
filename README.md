@@ -33,6 +33,19 @@ Managing message history in Discord has never been easier. PurgeBot is the **pre
 - **`/purge inactive`** - Clean up messages from users who left your server
 - **`/purge deleted`** - Remove messages from deleted Discord accounts
 
+#### **🔍 Advanced Content Filtering**
+
+Filter messages with precision using our intelligent filtering system:
+
+- **Smart Auto-Detection** - Automatically detects regex patterns vs plain text
+- **Multiple Filter Modes**:
+  - `contains` - Messages containing specific text
+  - `regex` - Advanced pattern matching
+  - `exact` - Exact message matches
+  - `starts_with` - Messages starting with text
+  - `ends_with` - Messages ending with text
+- **Case Sensitivity Control** - Optional case-sensitive matching
+
 #### **Real-Time Progress Tracking**
 
 Watch your purge operations in real-time with:
@@ -96,6 +109,22 @@ PurgeBot respects Discord's permission system:
 ### 2️⃣ Use `/help` to See All Commands
 
 ### 3️⃣ Start Purging with Confidence!
+
+### 📖 Example Commands
+
+```bash
+# Delete spam messages from a specific user
+/purge user target_id:channel user:@spammer filter:spam
+
+# Remove all messages with links from a role
+/purge role target_id:server role:@members filter:"https://" filter_mode:contains
+
+# Clean up messages matching a regex pattern
+/purge everyone target_id:channel filter:"(buy|sell|trade)" filter_mode:regex days:7
+
+# Delete messages starting with specific prefix (case-sensitive)
+/purge inactive target_id:category filter:"!" filter_mode:starts_with case_sensitive:true
+```
 
 ## 💬 Need Help?
 

@@ -1,13 +1,14 @@
-import { 
+import {
   Client,
   ChatInputCommandInteraction,
-  TextChannel, 
-  ThreadChannel, 
-  NewsChannel, 
+  TextChannel,
+  ThreadChannel,
+  NewsChannel,
   VoiceChannel,
   ForumChannel,
   AutocompleteInteraction
 } from "discord.js";
+import { ContentFilter } from "../services/ContentFilter";
 
 export type SupportedChannel = TextChannel | ThreadChannel | NewsChannel | VoiceChannel | ForumChannel;
 export type TextBasedChannel = TextChannel | ThreadChannel | NewsChannel | VoiceChannel;
@@ -24,12 +25,14 @@ export interface AutocompleteContext {
 
 export interface PurgeOptions {
   targetId: string;
+  targetType?: 'server' | 'category' | 'channel';
   userId?: string;
   roleId?: string;
   roleName?: string;
   type?: 'user' | 'role' | 'everyone' | 'inactive';
+  contentFilter?: ContentFilter;
   days?: number | null;
-  skipChannels: string[];
+  skipChannels?: string[];
   excludeMessageId?: string;
 }
 

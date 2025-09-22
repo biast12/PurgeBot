@@ -1,9 +1,10 @@
-import { 
+import {
   Message
 } from "discord.js";
 import { TextBasedChannel } from "../types";
 import { CONSTANTS, ERROR_CODES } from "../config/constants";
 import { RateLimiter } from "../utils/RateLimiter";
+import { ContentFilter } from "./ContentFilter";
 
 export class MessageService {
   private rateLimiter: RateLimiter;
@@ -17,7 +18,8 @@ export class MessageService {
     userId: string,
     onCancel: () => boolean,
     days?: number | null,
-    excludeMessageId?: string
+    excludeMessageId?: string,
+    contentFilter?: ContentFilter
   ): Promise<Message[]> {
     const userMessages: Message[] = [];
     let lastMessageId: string | undefined;
@@ -39,7 +41,10 @@ export class MessageService {
           
           if (msg.author?.id === userId) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
-              userMessages.push(msg);
+              // Apply content filter if provided
+              if (!contentFilter || contentFilter.matches(msg)) {
+                userMessages.push(msg);
+              }
             }
           }
         });
@@ -66,7 +71,8 @@ export class MessageService {
     onCancel: () => boolean,
     days?: number | null,
     guild?: any,
-    excludeMessageId?: string
+    excludeMessageId?: string,
+    contentFilter?: ContentFilter
   ): Promise<Message[]> {
     const roleMessages: Message[] = [];
     let lastMessageId: string | undefined;
@@ -105,7 +111,10 @@ export class MessageService {
           
           if (member && member.roles.cache.has(roleId)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
-              roleMessages.push(msg);
+              // Apply content filter if provided
+              if (!contentFilter || contentFilter.matches(msg)) {
+                roleMessages.push(msg);
+              }
             }
           }
         }
@@ -130,7 +139,8 @@ export class MessageService {
     channel: any,
     onCancel: () => boolean,
     days?: number | null,
-    excludeMessageId?: string
+    excludeMessageId?: string,
+    contentFilter?: ContentFilter
   ): Promise<Message[]> {
     const allMessages: Message[] = [];
     let lastMessageId: string | undefined;
@@ -152,7 +162,10 @@ export class MessageService {
           
           if (!msg.system) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
-              allMessages.push(msg);
+              // Apply content filter if provided
+              if (!contentFilter || contentFilter.matches(msg)) {
+                allMessages.push(msg);
+              }
             }
           }
         });
@@ -178,7 +191,8 @@ export class MessageService {
     guild: any,
     onCancel: () => boolean,
     days?: number | null,
-    excludeMessageId?: string
+    excludeMessageId?: string,
+    contentFilter?: ContentFilter
   ): Promise<Message[]> {
     const inactiveMessages: Message[] = [];
     let lastMessageId: string | undefined;
@@ -203,7 +217,10 @@ export class MessageService {
           
           if (!msg.system && !currentMembers.has(msg.author.id)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
-              inactiveMessages.push(msg);
+              // Apply content filter if provided
+              if (!contentFilter || contentFilter.matches(msg)) {
+                inactiveMessages.push(msg);
+              }
             }
           }
         });

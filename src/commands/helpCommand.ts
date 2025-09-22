@@ -61,13 +61,29 @@ export class HelpCommand extends BaseCommand {
       new ContainerBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder()
-            .setContent('## ⚙️ Parameters'),
+            .setContent('## ⚙️ Common Parameters'),
           new TextDisplayBuilder()
             .setContent(
-              '* **target_id** - Where to purge (server/category/channel)\n' +
-              '* **days** - Time limit (1-30 days)\n' +
-              '* **skip_channels** - Exclude channels (category mode)\n' +
-              '* **user/role** - Target for specific commands'
+              '**• target_id** - Where to purge (server/category/channel)\n' +
+              '**• days** - Time limit (1-30 days)\n' +
+              '**• skip_channels** - Exclude channels (category mode)\n' +
+              '**• user/role** - Target for specific commands'
+            )
+        )
+    );
+
+    // New content filtering section
+    response.addComponent(
+      new ContainerBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder()
+            .setContent('## 🔍 Content Filtering'),
+          new TextDisplayBuilder()
+            .setContent(
+              '**• filter** - Text or regex pattern to match messages\n' +
+              '**• filter_mode** - How to match (contains/regex/exact/starts_with/ends_with)\n' +
+              '**• case_sensitive** - Make filter case-sensitive (default: false)\n\n' +
+              '-# Auto-detects regex patterns when filter_mode is not specified'
             )
         )
     );

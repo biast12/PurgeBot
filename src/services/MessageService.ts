@@ -10,7 +10,11 @@ export class MessageService {
   private rateLimiter: RateLimiter;
 
   constructor() {
-    this.rateLimiter = new RateLimiter();
+    this.rateLimiter = new RateLimiter({
+      baseDelay: 100,
+      maxDelay: 5000,
+      enableMetrics: false // Set to true for debugging
+    });
   }
 
   async fetchUserMessages(
@@ -32,7 +36,7 @@ export class MessageService {
             limit: CONSTANTS.FETCH_LIMIT,
             before: lastMessageId
           });
-        });
+        }, `fetch_${channel.id}`);
 
         if (messages.size === 0) break;
 
@@ -92,7 +96,7 @@ export class MessageService {
             limit: CONSTANTS.FETCH_LIMIT,
             before: lastMessageId
           });
-        });
+        }, `fetch_${channel.id}`);
 
         if (messages.size === 0) break;
 
@@ -153,7 +157,7 @@ export class MessageService {
             limit: CONSTANTS.FETCH_LIMIT,
             before: lastMessageId
           });
-        });
+        }, `fetch_${channel.id}`);
 
         if (messages.size === 0) break;
 
@@ -208,7 +212,7 @@ export class MessageService {
             limit: CONSTANTS.FETCH_LIMIT,
             before: lastMessageId
           });
-        });
+        }, `fetch_${channel.id}`);
 
         if (messages.size === 0) break;
 
@@ -302,7 +306,7 @@ export class MessageService {
         if ('bulkDelete' in channel) {
           const result = await this.rateLimiter.execute(async () => {
             return await (channel as any).bulkDelete(chunk, true);
-          });
+          }, `delete_${channel.id}`, 1);
           deleted += result.size;
           if (operationId && result.size > 0) {
             const { operationManager } = await import('./OperationManager');
@@ -338,7 +342,7 @@ export class MessageService {
       try {
         await this.rateLimiter.execute(async () => {
           await message.delete();
-        });
+        }, `delete_${_channel.id}`, 0);
         
         deleted++;
 
@@ -361,6 +365,14 @@ export class MessageService {
     }
     
     return deleted;
+  }
+  // Expose rate limiter metrics for monitoring
+  public getRateLimiterMetrics() {
+    return this.rateLimiter.getMetrics();
+  }
+
+  public resetRateLimiterMetrics() {
+    this.rateLimiter.resetMetrics();
   }
 }
 

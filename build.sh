@@ -74,8 +74,7 @@ else
     echo -e "${RED}[ERROR] Build failed with error code: $?${NC}"
     echo "============================================"
     echo "Please check the console output above for details."
+    echo
+    echo "Press Enter to exit..."
+    read
 fi
-
-echo
-echo "Press Enter to exit..."
-read

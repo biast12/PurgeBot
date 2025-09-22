@@ -12,7 +12,7 @@ export class ValidationService {
     }
 
     const channel = guild.channels.cache.get(targetId);
-    
+
     if (!channel) {
       return {
         isValid: false,
@@ -24,14 +24,14 @@ export class ValidationService {
       const hasTextChannels = guild.channels.cache.some(
         ch => ch.parentId === targetId && this.isTextBasedChannel(ch.type)
       );
-      
+
       if (!hasTextChannels) {
         return {
           isValid: false,
           error: "Category has no text channels"
         };
       }
-      
+
       return {
         isValid: true,
         targetName: channel.name,

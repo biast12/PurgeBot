@@ -1,4 +1,4 @@
-import { 
+import {
   ChatInputCommandInteraction,
   TextDisplayBuilder,
   ActionRowBuilder,
@@ -20,7 +20,7 @@ export class PurgeProgressUI {
     }
   ): Promise<string | undefined> {
     const mainContainer = new ContainerBuilder();
-    
+
     mainContainer.addTextDisplayComponents(
       new TextDisplayBuilder()
         .setContent(`# 🔄 Purge in Progress\n\nPurging messages from **${data.userName}** in **${data.targetName}**`),
@@ -36,10 +36,10 @@ export class PurgeProgressUI {
         .setLabel("Cancel")
         .setStyle(ButtonStyle.Danger)
         .setEmoji("🛑");
-      
+
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(cancelButton);
-      
+
       components.push(row);
       this.setupCancelCollector(interaction, data.operationId);
     }
@@ -68,7 +68,7 @@ export class PurgeProgressUI {
       console.error('Error sending initial progress:', error);
       messageId = undefined;
     }
-    
+
     return messageId;
   }
 
@@ -97,7 +97,7 @@ export class PurgeProgressUI {
     } else if (data.type === 'channel_progress') {
       const percentage = Math.round((data.current / data.total) * 100);
       const progressBar = this.createProgressBar(percentage);
-      
+
       mainContainer.addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(`**📁 Processing: ${data.channelName}**\n${progressBar} ${percentage}% (${data.current}/${data.total})`)
@@ -117,17 +117,17 @@ export class PurgeProgressUI {
         .setLabel("Cancel")
         .setStyle(ButtonStyle.Danger)
         .setEmoji("🛑");
-      
+
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(cancelButton);
-      
+
       components.push(row);
     }
 
     await interaction.editReply({
       components: components,
       flags: MessageFlags.IsComponentsV2
-    } as any).catch(() => {});
+    } as any).catch(() => { });
   }
 
   async sendCompletion(
@@ -141,7 +141,7 @@ export class PurgeProgressUI {
     }
   ): Promise<void> {
     const mainContainer = new ContainerBuilder();
-    
+
     const textComponents = [
       new TextDisplayBuilder()
         .setContent(`# ✅ Purge Complete\n\nSuccessfully purged messages from **${data.userName}** in **${data.targetName}**`),
@@ -158,26 +158,26 @@ export class PurgeProgressUI {
         .filter(ch => ch.deleted > 0)
         .map(ch => `• ${ch.channelName}: ${ch.deleted} messages`)
         .join("\n");
-      
+
       textComponents.push(
         new TextDisplayBuilder()
           .setContent(`\n**Channel Breakdown**\n${channelList}`)
       );
     }
-    
+
     mainContainer.addTextDisplayComponents(...textComponents);
-    
+
     const components: any[] = [mainContainer];
 
     await interaction.editReply({
       components: components,
       flags: MessageFlags.IsComponentsV2
-    } as any).catch(() => {});
+    } as any).catch(() => { });
 
     await interaction.followUp({
       content: `<@${interaction.user.id}> The purge operation has been completed successfully!`,
       flags: MessageFlags.Ephemeral
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   private createProgressBar(percentage: number): string {
@@ -206,20 +206,20 @@ export class PurgeProgressUI {
       const deletedCount = operationManager.getDeletedCount(operationId);
 
       const cancelContainer = new ContainerBuilder();
-      const cancelMessage = deletedCount > 0 
+      const cancelMessage = deletedCount > 0
         ? `# ⚠️ Operation Cancelled\n\nThe purge operation has been cancelled by the user.\n\n**Messages deleted before cancellation:** ${deletedCount}`
         : "# ⚠️ Operation Cancelled\n\nThe purge operation has been cancelled by the user.";
-      
+
       cancelContainer.addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(cancelMessage)
       );
-      
+
       await i.update({
         components: [cancelContainer],
         flags: MessageFlags.IsComponentsV2
       } as any);
-      
+
       collector.stop();
     });
   }

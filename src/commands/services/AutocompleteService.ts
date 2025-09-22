@@ -4,7 +4,7 @@ export class AutocompleteService {
   async handleTargetAutocomplete(interaction: AutocompleteInteraction, excludeServer: boolean = false): Promise<void> {
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const guild = interaction.guild;
-    
+
     if (!guild) {
       await interaction.respond([]);
       return;
@@ -22,12 +22,12 @@ export class AutocompleteService {
     const categories = guild.channels.cache
       .filter(ch => ch.type === ChannelType.GuildCategory)
       .filter(ch => ch.name.toLowerCase().includes(focusedValue));
-    
+
     categories.forEach(category => {
       const hasTextChannels = guild.channels.cache.some(
         ch => ch.parentId === category.id && this.isTextChannel(ch.type)
       );
-      
+
       if (hasTextChannels) {
         choices.push({
           name: `📁 Category: ${category.name}`,
@@ -39,7 +39,7 @@ export class AutocompleteService {
     const channels = guild.channels.cache
       .filter(ch => this.isTextChannel(ch.type))
       .filter(ch => ch.name.toLowerCase().includes(focusedValue));
-    
+
     channels.forEach(channel => {
       const prefix = this.getChannelPrefix(channel.type);
       choices.push({
@@ -54,14 +54,14 @@ export class AutocompleteService {
   async handleUserAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
     const focusedValue = interaction.options.getFocused();
     const guild = interaction.guild;
-    
+
     if (!guild) {
       await interaction.respond([]);
       return;
     }
 
     const choices = [];
-    
+
     if (/^\d{17,19}$/.test(focusedValue)) {
       choices.push({
         name: `User ID: ${focusedValue}`,
@@ -72,7 +72,7 @@ export class AutocompleteService {
     if (focusedValue.length >= 2 && !/^\d+$/.test(focusedValue)) {
       try {
         const members = await guild.members.fetch({ query: focusedValue, limit: 10 });
-        
+
         members.forEach(member => {
           choices.push({
             name: `${member.user.username} (${member.user.id})`,

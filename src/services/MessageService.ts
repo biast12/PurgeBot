@@ -43,7 +43,7 @@ export class MessageService {
 
         messages.forEach((msg: Message) => {
           if (excludeMessageId && msg.id === excludeMessageId) return;
-          
+
           if (msg.author?.id === userId) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
@@ -113,7 +113,7 @@ export class MessageService {
               member = null;
             }
           }
-          
+
           if (member && member.roles.cache.has(roleId)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
@@ -164,7 +164,7 @@ export class MessageService {
 
         messages.forEach((msg: Message) => {
           if (excludeMessageId && msg.id === excludeMessageId) return;
-          
+
           if (!msg.system) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
@@ -203,7 +203,7 @@ export class MessageService {
     let lastMessageId: string | undefined;
     const cutoffTime = days ? Date.now() - (days * 24 * 60 * 60 * 1000) : 0;
 
-    await guild.members.fetch().catch(() => {});
+    await guild.members.fetch().catch(() => { });
     const currentMembers = new Set(guild.members.cache.keys());
 
     while (!onCancel()) {
@@ -219,7 +219,7 @@ export class MessageService {
 
         messages.forEach((msg: Message) => {
           if (excludeMessageId && msg.id === excludeMessageId) return;
-          
+
           if (!msg.system && !currentMembers.has(msg.author.id)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
@@ -271,8 +271,8 @@ export class MessageService {
 
     if (oldMessages.length > 0 && !onCancel()) {
       deleted += await this.individualDelete(
-        channel, 
-        oldMessages, 
+        channel,
+        oldMessages,
         onCancel,
         async (current, _total) => {
           if (onProgress) {
@@ -316,7 +316,7 @@ export class MessageService {
       }
 
       const chunk = messages.slice(i, i + Math.min(chunkSize, CONSTANTS.BULK_DELETE_LIMIT));
-      
+
       const startTime = Date.now();
       let batchSuccess = false;
       let rateLimitHit = false;
@@ -361,7 +361,7 @@ export class MessageService {
         );
       }
     }
-    
+
     return deleted;
   }
 
@@ -373,17 +373,17 @@ export class MessageService {
     operationId?: string
   ): Promise<number> {
     let deleted = 0;
-    
+
     for (let i = 0; i < messages.length; i++) {
       if (onCancel()) break;
-      
+
       const message = messages[i];
-      
+
       try {
         await this.rateLimiter.execute(async () => {
           await message.delete();
         }, `delete_${_channel.id}`, 0);
-        
+
         deleted++;
 
         if (operationId && deleted % 5 === 0) {
@@ -403,7 +403,7 @@ export class MessageService {
     if (onProgress && deleted > 0) {
       await onProgress(deleted, messages.length);
     }
-    
+
     return deleted;
   }
   // Expose rate limiter metrics for monitoring

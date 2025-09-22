@@ -1,4 +1,4 @@
-import { 
+import {
   CommandInteraction,
   ActionRowBuilder,
   ButtonBuilder,
@@ -27,9 +27,9 @@ export class UIService {
     };
 
     if (interaction.replied || interaction.deferred) {
-      await interaction.editReply(payload).catch(() => {});
+      await interaction.editReply(payload).catch(() => { });
     } else {
-      await interaction.reply(payload).catch(() => {});
+      await interaction.reply(payload).catch(() => { });
     }
   }
 
@@ -43,23 +43,23 @@ export class UIService {
     }
   ): Promise<void> {
     const mainContainer = new ContainerBuilder();
-    
+
     mainContainer.addTextDisplayComponents(
       new TextDisplayBuilder()
         .setContent(`# 🔄 Purge in Progress\n\nPurging messages from **${data.userName}** in **${data.targetName}**`),
       new TextDisplayBuilder()
         .setContent(`**Status**\n${data.status}`)
     );
-    
+
     const components: any[] = [mainContainer];
-    
+
     if (data.operationId) {
       const cancelButton = new ButtonBuilder()
         .setCustomId(`cancel_${data.operationId}`)
         .setLabel("Cancel")
         .setStyle(ButtonStyle.Danger)
         .setEmoji("🛑");
-      
+
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(cancelButton);
 
@@ -74,9 +74,9 @@ export class UIService {
     };
 
     if (interaction.replied || interaction.deferred) {
-      await interaction.editReply(payload).catch(() => {});
+      await interaction.editReply(payload).catch(() => { });
     } else {
-      await interaction.reply(payload).catch(() => {});
+      await interaction.reply(payload).catch(() => { });
     }
   }
 
@@ -87,12 +87,12 @@ export class UIService {
     if (!interaction.replied && !interaction.deferred) return;
 
     const mainContainer = new ContainerBuilder();
-    
+
     mainContainer.addTextDisplayComponents(
       new TextDisplayBuilder()
         .setContent(`# 🔄 Purge in Progress\n\nPurging messages from **${data.userName}** in **${data.targetName}**`)
     );
-    
+
     if (data.type === 'channel_start') {
       mainContainer.addTextDisplayComponents(
         new TextDisplayBuilder()
@@ -101,7 +101,7 @@ export class UIService {
     } else if (data.type === 'channel_progress') {
       const percentage = Math.round((data.current / data.total) * 100);
       const progressBar = this.createProgressBar(percentage);
-      
+
       mainContainer.addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(`**📁 Processing: ${data.channelName}**\n${progressBar} ${percentage}% (${data.current}/${data.total})`)
@@ -114,24 +114,24 @@ export class UIService {
     }
 
     const components: any[] = [mainContainer];
-    
+
     if (data.operationId) {
       const cancelButton = new ButtonBuilder()
         .setCustomId(`cancel_${data.operationId}`)
         .setLabel("Cancel")
         .setStyle(ButtonStyle.Danger)
         .setEmoji("🛑");
-      
+
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(cancelButton);
-      
+
       components.push(row);
     }
 
     await interaction.editReply({
       components: components,
       flags: MessageFlags.IsComponentsV2
-    } as any).catch(() => {});
+    } as any).catch(() => { });
   }
 
   async sendCompletion(
@@ -145,7 +145,7 @@ export class UIService {
     }
   ): Promise<void> {
     const mainContainer = new ContainerBuilder();
-    
+
     const textComponents = [
       new TextDisplayBuilder()
         .setContent(`# ✅ Purge Complete\n\nSuccessfully purged messages from **${data.userName}** in **${data.targetName}**`),
@@ -162,26 +162,26 @@ export class UIService {
         .filter(ch => ch.deleted > 0)
         .map(ch => `• ${ch.channelName}: ${ch.deleted} messages`)
         .join("\n");
-      
+
       textComponents.push(
         new TextDisplayBuilder()
           .setContent(`\n**Channel Breakdown**\n${channelList}`)
       );
     }
-    
+
     mainContainer.addTextDisplayComponents(...textComponents);
-    
+
     const components: any[] = [mainContainer];
 
     await interaction.editReply({
       components: components,
       flags: MessageFlags.IsComponentsV2
-    } as any).catch(() => {});
+    } as any).catch(() => { });
 
     await interaction.followUp({
       content: `<@${interaction.user.id}> The purge operation has been completed successfully!`,
       flags: MessageFlags.Ephemeral
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   private createProgressBar(percentage: number): string {
@@ -210,20 +210,20 @@ export class UIService {
       const deletedCount = operationManager.getDeletedCount(operationId);
 
       const cancelContainer = new ContainerBuilder();
-      const cancelMessage = deletedCount > 0 
+      const cancelMessage = deletedCount > 0
         ? `# ⚠️ Operation Cancelled\n\nThe purge operation has been cancelled by the user.\n\n**Messages deleted before cancellation:** ${deletedCount}`
         : "# ⚠️ Operation Cancelled\n\nThe purge operation has been cancelled by the user.";
-      
+
       cancelContainer.addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(cancelMessage)
       );
-      
+
       await i.update({
         components: [cancelContainer],
         flags: MessageFlags.IsComponentsV2
       } as any);
-      
+
       collector.stop();
     });
   }

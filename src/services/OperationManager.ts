@@ -7,7 +7,7 @@ export class OperationManager {
 
   createOperation(interaction: ChatInputCommandInteraction, guildId: string): string {
     const operationId = `${guildId}-${Date.now()}`;
-    
+
     const operation: OperationState = {
       id: operationId,
       guildId,
@@ -15,17 +15,17 @@ export class OperationManager {
       startTime: Date.now(),
       interaction
     };
-    
+
     this.operations.set(operationId, operation);
     this.guildLocks.set(guildId, operationId);
-    
+
     return operationId;
   }
 
   isGuildLocked(guildId: string): boolean {
     const existingOpId = this.guildLocks.get(guildId);
     if (!existingOpId) return false;
-    
+
     const operation = this.operations.get(existingOpId);
     return operation !== undefined && !operation.cancelled;
   }
@@ -33,7 +33,7 @@ export class OperationManager {
   cancelOperation(operationId: string): boolean {
     const operation = this.operations.get(operationId);
     if (!operation) return false;
-    
+
     operation.cancelled = true;
     return true;
   }
@@ -58,7 +58,7 @@ export class OperationManager {
   completeOperation(operationId: string): void {
     const operation = this.operations.get(operationId);
     if (!operation) return;
-    
+
     this.operations.delete(operationId);
     this.guildLocks.delete(operation.guildId);
   }

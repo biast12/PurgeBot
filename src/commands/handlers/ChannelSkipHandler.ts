@@ -1,4 +1,4 @@
-import { 
+import {
   ChatInputCommandInteraction,
   Guild,
   ActionRowBuilder,
@@ -20,7 +20,7 @@ export class ChannelSkipHandler {
     categoryName: string
   ): Promise<{ proceed: boolean; skippedChannels?: string[] }> {
     const category = guild.channels.cache.get(categoryId);
-    
+
     if (!category || category.type !== ChannelType.GuildCategory) {
       return { proceed: false };
     }
@@ -64,12 +64,12 @@ export class ChannelSkipHandler {
       .addComponents(continueButton, cancelButton);
 
     const components = [];
-    
+
     components.push(
       new TextDisplayBuilder()
         .setContent(`# Channel Selection\n\nYou selected the category **${categoryName}**.\n\nWould you like to skip any channels during the purge?`)
     );
-    
+
     components.push(
       new ContainerBuilder()
         .addTextDisplayComponents(
@@ -79,12 +79,12 @@ export class ChannelSkipHandler {
             .setContent(`**Category:** ${categoryName}`)
         )
     );
-    
+
     components.push(
       new TextDisplayBuilder()
         .setContent('_Select channels to skip or click Continue to purge all channels_')
     );
-    
+
     components.push(selectRow);
     components.push(buttonRow);
 
@@ -150,7 +150,7 @@ export class ChannelSkipHandler {
                 .setContent('# ⏱️ Selection Timed Out\n\nThe channel selection has timed out.')
             ],
             flags: MessageFlags.IsComponentsV2
-          } as any).catch(() => {});
+          } as any).catch(() => { });
           resolve({ proceed: false });
         }
       });

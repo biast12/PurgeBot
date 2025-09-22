@@ -36,9 +36,9 @@ export class PurgeService {
     onProgress?: (update: any) => Promise<void>
   ): Promise<PurgeResult> {
     return this.purgeMessages(
-      guild, 
-      { ...options, type: 'user' }, 
-      operationId, 
+      guild,
+      { ...options, type: 'user' },
+      operationId,
       onProgress
     );
   }
@@ -64,7 +64,7 @@ export class PurgeService {
       const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels || []);
 
       const useParallel = channels.length >= CONSTANTS.MIN_CHANNELS_FOR_PARALLEL &&
-                          !options.targetType?.includes('channel');
+        !options.targetType?.includes('channel');
 
       if (useParallel) {
         const processor = new ParallelProcessor({
@@ -188,18 +188,18 @@ export class PurgeService {
         console.error(`Could not fetch target ${targetId}:`, err);
         target = guild.channels.cache.get(targetId);
       }
-      
+
       if (!target) {
         throw new Error("Target channel or category not found");
       }
 
       if (target.type === ChannelType.GuildCategory) {
         await guild.channels.fetch();
-        
+
         for (const channel of guild.channels.cache.values()) {
           if (channel.parentId === targetId &&
-              this.isTextBasedChannel(channel) &&
-              !skipChannels.includes(channel.id)) {
+            this.isTextBasedChannel(channel) &&
+            !skipChannels.includes(channel.id)) {
             try {
               const fetchedChannel = await guild.channels.fetch(channel.id);
               if (fetchedChannel && this.isTextBasedChannel(fetchedChannel)) {
@@ -376,7 +376,7 @@ export class PurgeService {
 
     const activeThreads = await forum.threads.fetchActive();
     const archivedThreads = await forum.threads.fetchArchived();
-    
+
     const allThreads = [
       ...activeThreads.threads.values(),
       ...archivedThreads.threads.values()
@@ -384,7 +384,7 @@ export class PurgeService {
 
     for (const thread of allThreads) {
       if (operationManager.isOperationCancelled(operationId)) break;
-      
+
       const deleted = await this.purgeTextChannel(
         thread,
         options,
@@ -392,7 +392,7 @@ export class PurgeService {
         onProgress,
         guild
       );
-      
+
       totalDeleted += deleted;
     }
 

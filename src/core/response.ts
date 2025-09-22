@@ -1,4 +1,4 @@
-import { 
+import {
   ChatInputCommandInteraction,
   ActionRowBuilder,
   InteractionReplyOptions,
@@ -24,14 +24,14 @@ export class ResponseBuilder {
 
   public build(): InteractionReplyOptions {
     const reply: InteractionReplyOptions = {};
-    
+
     if (this.content) reply.content = this.content;
-    
+
     if (this.components.length > 0) {
       reply.components = this.components;
       reply.flags = MessageFlags.IsComponentsV2;
     }
-    
+
     return reply;
   }
 }
@@ -41,8 +41,8 @@ export async function sendResponse(
   response: ResponseBuilder | string,
   ephemeral: boolean = false
 ): Promise<void> {
-  const replyOptions = 
-    typeof response === 'string' 
+  const replyOptions =
+    typeof response === 'string'
       ? { content: response }
       : response.build();
 
@@ -53,9 +53,9 @@ export async function sendResponse(
   }
 
   if (interaction.replied || interaction.deferred) {
-    await interaction.editReply(replyOptions as any).catch(() => {});
+    await interaction.editReply(replyOptions as any).catch(() => { });
   } else {
-    await interaction.reply(replyOptions).catch(() => {});
+    await interaction.reply(replyOptions).catch(() => { });
   }
 }
 
@@ -68,7 +68,7 @@ export async function sendError(
 
   const response = new ResponseBuilder()
     .addComponent(textDisplay);
-    
+
   await sendResponse(interaction, response, true);
 }
 
@@ -82,6 +82,6 @@ export async function sendSuccess(
 
   const response = new ResponseBuilder()
     .addComponent(textDisplay);
-    
+
   await sendResponse(interaction, response, ephemeral);
 }

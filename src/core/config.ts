@@ -11,7 +11,7 @@ let config: BotConfig | null = null;
 
 export function validateConfig(): void {
   const token = process.env.TOKEN;
-  
+
   if (!token || token.length === 0) {
     throw new Error('Missing TOKEN in environment variables. Please set it in the .env file.');
   }

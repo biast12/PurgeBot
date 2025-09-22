@@ -13,7 +13,7 @@ export class PurgeBot {
 
   constructor() {
     validateConfig();
-    
+
     logger.configure({
       consoleEnabled: true,
       minLevel: LogLevel.INFO
@@ -58,7 +58,7 @@ export class PurgeBot {
     try {
       if (interaction.isChatInputCommand()) {
         const commandName = interaction.commandName;
-        
+
         if (this.commandManager.hasCommand(commandName)) {
           await this.commandManager.execute(commandName, {
             client: this.client,
@@ -70,7 +70,7 @@ export class PurgeBot {
       }
     } catch (error) {
       logger.error(LogArea.COMMANDS, `Error handling interaction: ${error}`);
-      
+
       if (interaction.isChatInputCommand() && !interaction.replied && !interaction.deferred) {
         await sendError(interaction, 'An unexpected error occurred. Please try again later.');
       }
@@ -79,7 +79,7 @@ export class PurgeBot {
 
   private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
     const commandName = interaction.commandName;
-    
+
     if (this.commandManager.hasCommand(commandName)) {
       const command = this.commandManager.getCommand(commandName);
       if (command?.handleAutocomplete) {

@@ -26,14 +26,14 @@ async function registerCommands(): Promise<void> {
     const commands = commandManager.getAllCommands().map(cmd => cmd.buildCommand().toJSON());
 
     const rest = new REST({ version: '10' }).setToken(config.token);
-    
+
     await rest.put(
       Routes.applicationCommands(clientId!),
       { body: commands }
     );
 
     const registeredCommands = commandManager.getAllCommands();
-    
+
     logger.info(LogArea.NONE, `Successfully registered ${registeredCommands.length} commands:`);
     registeredCommands.forEach(cmd => {
       logger.info(LogArea.NONE, `  /${cmd.name} - ${cmd.description}`);

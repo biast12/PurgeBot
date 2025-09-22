@@ -15,7 +15,7 @@ import { ContentFilter, FilterMode } from '../services/ContentFilter';
 export class PurgeCommand extends BaseCommand {
   public readonly name = 'purge';
   public readonly description = 'Purge messages from your server';
-  
+
   private validationService: ValidationService;
   private autocompleteService: AutocompleteService;
   private channelSkipHandler: ChannelSkipHandler;
@@ -334,23 +334,23 @@ export class PurgeCommand extends BaseCommand {
     ];
 
     const missingPermissions = requiredPermissions.filter(perm => !botMember.permissions.has(perm));
-    
+
     if (missingPermissions.length > 0) {
       const permissionNames = missingPermissions.map(perm => {
-        switch(perm) {
+        switch (perm) {
           case PermissionsBitField.Flags.ViewChannel: return 'View Channel';
           case PermissionsBitField.Flags.ReadMessageHistory: return 'Read Message History';
           case PermissionsBitField.Flags.ManageMessages: return 'Manage Messages';
           default: return 'Unknown';
         }
       }).join(', ');
-      
+
       await sendError(interaction, `I'm missing required permissions: ${permissionNames}. Please ensure I have these permissions to purge messages.`);
       return;
     }
 
     const subcommand = interaction.options.getSubcommand();
-    
+
     switch (subcommand) {
       case 'user':
         await this.handleUserPurge(context);
@@ -566,9 +566,9 @@ export class PurgeCommand extends BaseCommand {
         targetId,
         validation.targetName!
       );
-      
+
       if (!skipResult.proceed) return;
-      
+
       await this.startPurge(
         context,
         guild,
@@ -610,9 +610,9 @@ export class PurgeCommand extends BaseCommand {
         targetId,
         validation.targetName!
       );
-      
+
       if (!skipResult.proceed) return;
-      
+
       await this.startPurge(
         context,
         guild,
@@ -686,7 +686,7 @@ export class PurgeCommand extends BaseCommand {
         if (botMember) {
           const channelPerms = targetChannel.permissionsFor(botMember);
           const missingChannelPerms = [];
-          
+
           if (!channelPerms?.has(PermissionsBitField.Flags.ViewChannel)) {
             missingChannelPerms.push('View Channel');
           }
@@ -696,7 +696,7 @@ export class PurgeCommand extends BaseCommand {
           if (!channelPerms?.has(PermissionsBitField.Flags.ManageMessages)) {
             missingChannelPerms.push('Manage Messages');
           }
-          
+
           if (missingChannelPerms.length > 0) {
             await sendError(interaction, `I'm missing the following permissions in ${targetChannel.name}: **${missingChannelPerms.join(', ')}**`);
             return;
@@ -704,12 +704,12 @@ export class PurgeCommand extends BaseCommand {
         }
       }
     }
-    
+
     const operationId = operationManager.createOperation(interaction, guild.id);
-    
+
     try {
       let targetDescription = '';
-      
+
       if (purgeOptions.type === 'user') {
         const user = await context.client.users.fetch(purgeOptions.userId).catch(() => null);
         targetDescription = user?.username || 'Unknown User';
@@ -720,10 +720,10 @@ export class PurgeCommand extends BaseCommand {
       } else if (purgeOptions.type === 'inactive') {
         targetDescription = 'inactive users';
       }
-      
+
       const target = targetId === guild.id ? guild : guild.channels.cache.get(targetId);
       const targetName = target?.name || 'Unknown Target';
-      
+
       const responseMessageId = await this.progressUI.sendInitialProgress(interaction, {
         userName: targetDescription,
         targetName,
@@ -734,7 +734,7 @@ export class PurgeCommand extends BaseCommand {
         if (operationManager.isOperationCancelled(operationId)) {
           return;
         }
-        
+
         await this.progressUI.updateProgress(interaction, {
           userName: targetDescription,
           targetName,

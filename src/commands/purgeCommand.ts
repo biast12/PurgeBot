@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionsBitField } from 'discord.js';
+import { SlashCommandBuilder, PermissionsBitField, InteractionContextType } from 'discord.js';
 import { BaseCommand } from '../core/command';
 import { CommandContext, AutocompleteContext } from '../types';
 import { sendError } from '../core/response';
@@ -299,7 +299,8 @@ export class PurgeCommand extends BaseCommand {
               .setDescription('Skip specific channels when purging (category mode only)')
               .setRequired(false)
           )
-      ) as SlashCommandBuilder;
+      )
+      .setContexts(InteractionContextType.Guild) as SlashCommandBuilder;
   }
 
   public async execute(context: CommandContext): Promise<void> {

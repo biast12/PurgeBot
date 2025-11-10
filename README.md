@@ -55,22 +55,6 @@ Watch your purge operations in real-time with:
 - Estimated time remaining
 - One-click cancellation for any operation
 
-#### **Smart Safety Features**
-
-- Server-wide "everyone" purge disabled for safety
-- Automatic permission checking before operations
-- Graceful error handling and recovery
-- Operation locking prevents conflicts
-
-## 📊 Built for Scale
-
-Whether you're managing a small community or a massive server with millions of messages, PurgeBot scales effortlessly:
-
-- ✅ **Handles servers with 100,000+ members**
-- ✅ **Processes channels with 1M+ messages**
-- ✅ **Manages multiple simultaneous purge requests**
-- ✅ **99.9% uptime guarantee**
-
 ## 🛡️ Security & Permissions
 
 PurgeBot respects Discord's permission system:
@@ -85,12 +69,6 @@ PurgeBot respects Discord's permission system:
 
 - Users must have `Manage Messages` permission to execute purge commands
 - Server administrators maintain full control over who can use PurgeBot
-
-## ⭐ What Server Owners Are Saying
-
-> *"PurgeBot saved us hours of manual message cleanup. The role-based purging is a game-changer!"* - Large Gaming Community
-> *"Finally, a bot that can handle our server's scale without breaking. The progress tracking is fantastic!"* - Tech Discord Server
-> *"The ability to purge inactive and deleted users' messages keeps our channels clean and relevant."* - Professional Community
 
 ## 🎮 Perfect For:
 
@@ -129,7 +107,6 @@ PurgeBot respects Discord's permission system:
 ## 💬 Need Help?
 
 - **[Join Our Support Server](https://biast12.com/botsupport)** - Get instant help from our team
-- **[View Documentation](https://github.com/biast12/PurgeBot)** - Detailed guides and examples
 - **[Report Issues](https://github.com/biast12/PurgeBot/issues)** - Help us improve PurgeBot
 
 ## 🔧 Self-Hosting (Advanced Users)

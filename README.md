@@ -10,12 +10,6 @@
 
 Managing message history in Discord has never been easier. PurgeBot is the **premium solution** trusted by server administrators who demand **performance**, **reliability**, and **precision** in their moderation tools.
 
-### ⚡ Lightning-Fast Performance
-
-- **Bulk delete thousands of messages** in seconds
-- Advanced rate-limiting technology prevents Discord API timeouts
-- Intelligent message batching for maximum efficiency
-
 ### 🎯 Surgical Precision
 
 - Target specific users, roles, or everyone
@@ -50,9 +44,7 @@ Filter messages with precision using our intelligent filtering system:
 
 Watch your purge operations in real-time with:
 
-- Live progress bars showing completion percentage
 - Message count and channel tracking
-- Estimated time remaining
 - One-click cancellation for any operation
 
 ## 🛡️ Security & Permissions
@@ -61,6 +53,7 @@ PurgeBot respects Discord's permission system:
 
 ### Required Bot Permissions:
 
+- `Send Messages` - Send the progress and completed view
 - `View Channel` - Access channel content
 - `Read Message History` - Scan existing messages
 - `Manage Messages` - Delete targeted messages
@@ -82,7 +75,7 @@ PurgeBot respects Discord's permission system:
 
 ### 1️⃣ Add PurgeBot to Your Server
 
-[![Add to Discord](https://img.shields.io/badge/Add%20to-Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1356612233878179921&permissions=74752&integration_type=0&scope=bot)
+[![Add to Discord](https://img.shields.io/badge/Add%20to-Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1356612233878179921&permissions=76800&integration_type=0&scope=bot)
 
 ### 2️⃣ Use `/help` to See All Commands
 
@@ -158,13 +151,6 @@ npm start
 - `run.sh` - Start the bot (Linux/macOS)
 
 </details>
-
-## 📈 Statistics
-
-- **Active Servers:** 500+
-- **Messages Purged:** 10M+
-- **Average Response Time:** <100ms
-- **Uptime:** 99.9%
 
 ## 🏆 Why We're Different
 

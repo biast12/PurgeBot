@@ -29,7 +29,7 @@ export class HelpCommand extends BaseCommand {
 
     response.addComponent(
       new TextDisplayBuilder()
-        .setContent('# 📚 PurgeBot\n\nPowerful message management for Discord servers.')
+        .setContent('# PurgeBot\n\nPowerful message management for Discord servers.')
     );
 
     response.addComponent(
@@ -42,7 +42,7 @@ export class HelpCommand extends BaseCommand {
       new ContainerBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder()
-            .setContent('## 🗑️ Commands'),
+            .setContent('## Bot Commands'),
           new TextDisplayBuilder()
             .setContent(
               '**`/purge user`** - Delete messages from a specific user\n' +
@@ -58,7 +58,7 @@ export class HelpCommand extends BaseCommand {
       new ContainerBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder()
-            .setContent('## ⚙️ Common Parameters'),
+            .setContent('## Parameters'),
           new TextDisplayBuilder()
             .setContent(
               '**• target_id** - Where to purge (server/category/channel)\n' +
@@ -73,7 +73,7 @@ export class HelpCommand extends BaseCommand {
       new ContainerBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder()
-            .setContent('## 🔍 Content Filtering'),
+            .setContent('## Filtering'),
           new TextDisplayBuilder()
             .setContent(
               '**• filter** - Text or regex pattern to match messages\n' +
@@ -85,16 +85,10 @@ export class HelpCommand extends BaseCommand {
     );
 
     response.addComponent(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Small)
-        .setDivider(true)
-    );
-
-    response.addComponent(
       new ContainerBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder()
-            .setContent('## 📋 Required Permissions'),
+            .setContent('## Required Permissions'),
           new TextDisplayBuilder()
             .setContent(
               '**Manage Messages** - To see channels and their content\n' +
@@ -117,11 +111,6 @@ export class HelpCommand extends BaseCommand {
           .setStyle(ButtonStyle.Link)
           .setURL('https://biast12.com/botsupport')
           .setEmoji('❓'),
-        new ButtonBuilder()
-          .setLabel('GitHub')
-          .setStyle(ButtonStyle.Link)
-          .setURL('https://github.com/biast12/PurgeBot')
-          .setEmoji('📂')
       );
 
     response.addComponent(row);

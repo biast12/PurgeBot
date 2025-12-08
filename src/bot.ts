@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Interaction, AutocompleteInteraction } from 'discord.js';
+import { Client, GatewayIntentBits, Interaction, AutocompleteInteraction, ActivityType, PresenceUpdateStatus } from 'discord.js';
 import { validateConfig, getBotConfig } from './core/config';
 import { CommandManager } from './core/commandManager';
 import { PurgeCommand } from './commands/purgeCommand';
@@ -39,15 +39,41 @@ export class PurgeBot {
     this.commandManager.register(new HelpCommand());
   }
 
+  private updatePresence(): void {
+    const serverCount = this.client.guilds.cache.size;
+    this.client.user?.setPresence({
+      activities: [{
+        name: `🗑️ /purge in ${serverCount} servers`,
+        type: ActivityType.Custom
+      }],
+      status: PresenceUpdateStatus.Online
+    });
+  }
+
   private setupEventHandlers(): void {
     this.client.once('clientReady', () => {
+      const serverCount = this.client.guilds.cache.size;
       logger.info(LogArea.STARTUP, `PurgeBot is online as ${this.client.user?.tag}`);
-      logger.info(LogArea.STARTUP, `Serving ${this.client.guilds.cache.size} guilds`);
+      logger.info(LogArea.STARTUP, `Serving ${serverCount} guilds`);
+
+      // Set Rich Presence and custom status
+      this.updatePresence();
+
       logger.spacer('=', undefined, LogLevel.INFO);
     });
 
     this.client.on('interactionCreate', async (interaction: Interaction) => {
       await this.handleInteraction(interaction);
+    });
+
+    this.client.on('guildCreate', (guild) => {
+      logger.info(LogArea.STARTUP, `Joined new guild: ${guild.name} (${guild.id})`);
+      this.updatePresence();
+    });
+
+    this.client.on('guildDelete', (guild) => {
+      logger.info(LogArea.STARTUP, `Left guild: ${guild.name} (${guild.id})`);
+      this.updatePresence();
     });
 
     process.on('SIGINT', () => this.shutdown());

@@ -6,6 +6,7 @@ import { CONSTANTS, ERROR_CODES } from "../config/constants";
 import { RateLimiter } from "../utils/RateLimiter";
 import { ContentFilter } from "./ContentFilter";
 import { batchOptimizer } from "./BatchOptimizer";
+import { threadArchiveService } from "./ThreadArchiveService";
 
 export class MessageService {
   private rateLimiter: RateLimiter;
@@ -292,6 +293,11 @@ export class MessageService {
     onCancel: () => boolean,
     operationId?: string
   ): Promise<number> {
+    // Skip bulk delete for archived threads, use individual delete instead
+    if (threadArchiveService.isArchivedThread(channel)) {
+      return await this.individualDelete(channel, messages, onCancel, undefined, operationId);
+    }
+
     let deleted = 0;
 
     // Update performance metrics
@@ -374,6 +380,19 @@ export class MessageService {
   ): Promise<number> {
     let deleted = 0;
 
+    // Handle archived threads
+    const isArchivedThread = threadArchiveService.isArchivedThread(_channel);
+    let threadState = null;
+
+    if (isArchivedThread) {
+      threadState = threadArchiveService.captureState(_channel as any);
+      const unarchived = await threadArchiveService.unarchive(_channel as any);
+      if (!unarchived) {
+        console.error(`Cannot delete messages from archived thread: unable to unarchive`);
+        return 0;
+      }
+    }
+
     for (let i = 0; i < messages.length; i++) {
       if (onCancel()) break;
 
@@ -395,13 +414,22 @@ export class MessageService {
           await onProgress(i + 1, messages.length);
         }
       } catch (error: any) {
-        if (error.code !== ERROR_CODES.UNKNOWN_MESSAGE) {
+        // Enhanced error handling for threads
+        if (error.code === ERROR_CODES.THREAD_ARCHIVED) {
+          console.error(`Thread became archived during deletion, stopping`);
+          break;
+        } else if (error.code !== ERROR_CODES.UNKNOWN_MESSAGE) {
           console.error(`Error deleting message ${message.id}:`, error);
         }
       }
     }
     if (onProgress && deleted > 0) {
       await onProgress(deleted, messages.length);
+    }
+
+    // Restore archive state
+    if (isArchivedThread && threadState) {
+      await threadArchiveService.restoreState(_channel as any, threadState);
     }
 
     return deleted;

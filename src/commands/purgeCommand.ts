@@ -89,6 +89,12 @@ export class PurgeCommand extends BaseCommand {
               .setDescription('Skip specific channels when purging (category mode only)')
               .setRequired(false)
           )
+          .addBooleanOption(option =>
+            option
+              .setName('include_threads')
+              .setDescription('Include messages from threads (will unarchive if needed)')
+              .setRequired(false)
+          )
       )
       .addSubcommand(subcommand =>
         subcommand
@@ -146,6 +152,12 @@ export class PurgeCommand extends BaseCommand {
               .setDescription('Skip specific channels when purging (category mode only)')
               .setRequired(false)
           )
+          .addBooleanOption(option =>
+            option
+              .setName('include_threads')
+              .setDescription('Include messages from threads (will unarchive if needed)')
+              .setRequired(false)
+          )
       )
       .addSubcommand(subcommand =>
         subcommand
@@ -195,6 +207,12 @@ export class PurgeCommand extends BaseCommand {
             option
               .setName('skip_channels')
               .setDescription('Skip specific channels when purging (category mode only)')
+              .setRequired(false)
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('include_threads')
+              .setDescription('Include messages from threads (will unarchive if needed)')
               .setRequired(false)
           )
       )
@@ -248,6 +266,12 @@ export class PurgeCommand extends BaseCommand {
               .setDescription('Skip specific channels when purging (category mode only)')
               .setRequired(false)
           )
+          .addBooleanOption(option =>
+            option
+              .setName('include_threads')
+              .setDescription('Include messages from threads (will unarchive if needed)')
+              .setRequired(false)
+          )
       )
       .addSubcommand(subcommand =>
         subcommand
@@ -297,6 +321,12 @@ export class PurgeCommand extends BaseCommand {
             option
               .setName('skip_channels')
               .setDescription('Skip specific channels when purging (category mode only)')
+              .setRequired(false)
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('include_threads')
+              .setDescription('Include messages from threads (will unarchive if needed)')
               .setRequired(false)
           )
       )
@@ -430,6 +460,7 @@ export class PurgeCommand extends BaseCommand {
     const userId = user.id;
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+    const includeThreads = interaction.options.getBoolean('include_threads') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -449,7 +480,8 @@ export class PurgeCommand extends BaseCommand {
       type: 'user' as const,
       userId,
       days,
-      contentFilter
+      contentFilter,
+      includeThreads
     };
 
     if (skipChannels && validation.targetType === 'category') {
@@ -482,6 +514,7 @@ export class PurgeCommand extends BaseCommand {
     const role = interaction.options.getRole('role', true);
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+    const includeThreads = interaction.options.getBoolean('include_threads') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -502,7 +535,8 @@ export class PurgeCommand extends BaseCommand {
       roleId: role.id,
       roleName: role.name,
       days,
-      contentFilter
+      contentFilter,
+      includeThreads
     };
 
     if (skipChannels && validation.targetType === 'category') {
@@ -540,6 +574,7 @@ export class PurgeCommand extends BaseCommand {
     const targetId = interaction.options.getString('target_id', true);
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+    const includeThreads = interaction.options.getBoolean('include_threads') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -574,11 +609,11 @@ export class PurgeCommand extends BaseCommand {
         context,
         guild,
         targetId,
-        { type: 'everyone', days, contentFilter },
+        { type: 'everyone', days, contentFilter, includeThreads },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'everyone', days, contentFilter }, []);
+      await this.startPurge(context, guild, targetId, { type: 'everyone', days, contentFilter, includeThreads }, []);
     }
   }
 
@@ -589,6 +624,7 @@ export class PurgeCommand extends BaseCommand {
     const targetId = interaction.options.getString('target_id', true);
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+    const includeThreads = interaction.options.getBoolean('include_threads') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -618,11 +654,11 @@ export class PurgeCommand extends BaseCommand {
         context,
         guild,
         targetId,
-        { type: 'inactive', days, contentFilter },
+        { type: 'inactive', days, contentFilter, includeThreads },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'inactive', days, contentFilter }, []);
+      await this.startPurge(context, guild, targetId, { type: 'inactive', days, contentFilter, includeThreads }, []);
     }
   }
 
@@ -634,6 +670,7 @@ export class PurgeCommand extends BaseCommand {
     const userId = '456226577798135808';
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+    const includeThreads = interaction.options.getBoolean('include_threads') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -663,11 +700,11 @@ export class PurgeCommand extends BaseCommand {
         context,
         guild,
         targetId,
-        { type: 'user', userId, days, contentFilter },
+        { type: 'user', userId, days, contentFilter, includeThreads },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'user', userId, days, contentFilter }, []);
+      await this.startPurge(context, guild, targetId, { type: 'user', userId, days, contentFilter, includeThreads }, []);
     }
   }
 

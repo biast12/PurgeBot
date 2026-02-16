@@ -34,6 +34,7 @@ export interface PurgeOptions {
   days?: number | null;
   skipChannels?: string[];
   excludeMessageId?: string;
+  includeThreads?: boolean;
 }
 
 export interface PurgeProgress {

@@ -1,7 +1,8 @@
 import {
   Guild,
   ChannelType,
-  ForumChannel
+  ForumChannel,
+  ThreadChannel
 } from "discord.js";
 import {
   PurgeOptions,
@@ -14,7 +15,7 @@ import { operationManager } from "./OperationManager";
 import { ParallelProcessor } from "./ParallelProcessor";
 import { logger } from "../utils/logger";
 import { LogArea } from "../types/logger";
-import { CONSTANTS } from "../config/constants";
+import { CONSTANTS, ERROR_CODES } from "../config/constants";
 
 export class PurgeService {
   async purgeMessages(
@@ -61,7 +62,7 @@ export class PurgeService {
     let runningTotal = 0;
 
     try {
-      const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels || []);
+      const channels = await this.getTargetChannels(guild, options.targetId, options.skipChannels || [], options.includeThreads || false);
 
       const useParallel = channels.length >= CONSTANTS.MIN_CHANNELS_FOR_PARALLEL &&
         !options.targetType?.includes('channel');
@@ -160,7 +161,8 @@ export class PurgeService {
   private async getTargetChannels(
     guild: Guild,
     targetId: string,
-    skipChannels: string[]
+    skipChannels: string[],
+    includeThreads: boolean = false
   ): Promise<SupportedChannel[]> {
     const channels: SupportedChannel[] = [];
 
@@ -218,7 +220,46 @@ export class PurgeService {
       }
     }
 
+    if (includeThreads) {
+      const threads = await this.fetchThreadsForChannels(channels, guild);
+      channels.push(...threads);
+    }
+
     return channels;
+  }
+
+  private async fetchThreadsForChannels(
+    channels: SupportedChannel[],
+    _guild: Guild
+  ): Promise<ThreadChannel[]> {
+    const allThreads: ThreadChannel[] = [];
+
+    for (const channel of channels) {
+      if (channel.type === ChannelType.GuildText ||
+          channel.type === ChannelType.GuildAnnouncement) {
+        try {
+          const activeThreads = await channel.threads.fetchActive();
+          allThreads.push(...activeThreads.threads.values());
+
+          const archivedPublic = await channel.threads.fetchArchived({ type: 'public' });
+          allThreads.push(...archivedPublic.threads.values());
+
+          try {
+            const archivedPrivate = await channel.threads.fetchArchived({ type: 'private' });
+            allThreads.push(...archivedPrivate.threads.values());
+          } catch (error: any) {
+            // May fail if bot lacks ManageThreads permission, continue with other threads
+            if (error.code !== ERROR_CODES.MISSING_ACCESS) {
+              logger.error(LogArea.PURGE, `Failed to fetch private threads for ${channel.name}: ${error.message}`);
+            }
+          }
+        } catch (error: any) {
+          logger.error(LogArea.PURGE, `Failed to fetch threads for channel ${channel.name}: ${error.message}`);
+        }
+      }
+    }
+
+    return allThreads;
   }
 
   private async purgeChannel(

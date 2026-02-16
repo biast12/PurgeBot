@@ -1,4 +1,5 @@
-import { REST, Routes } from 'discord.js';
+import { REST } from '@discordjs/rest';
+import { Routes } from 'discord-api-types/v10';
 import { getBotConfig } from '../core/config';
 import { CommandManager } from '../core/commandManager';
 import { PurgeCommand } from '../commands/purgeCommand';

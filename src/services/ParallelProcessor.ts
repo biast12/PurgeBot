@@ -207,8 +207,22 @@ export class ParallelProcessor extends EventEmitter {
             error: error.message
           });
 
-          logger.error(LogArea.PURGE,
-            `Worker ${worker.id}: Failed to process ${task.channel.name} after ${this.maxRetries} retries: ${error.message}`
+          await logger.logError(
+            LogArea.PURGE,
+            `Worker ${worker.id}: Failed to process ${task.channel.name} after ${this.maxRetries} retries`,
+            error,
+            {
+              channelId: task.channel.id,
+              channelName: task.channel.name,
+              guildId: task.channel.guild?.id,
+              guildName: task.channel.guild?.name,
+              metadata: {
+                operationId: task.operationId,
+                workerId: worker.id,
+                retryCount: task.retryCount || 0,
+                operationType: 'parallelProcessing'
+              }
+            }
           );
         }
       } finally {

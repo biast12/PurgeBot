@@ -3,9 +3,12 @@ import { validateConfig, getBotConfig } from './core/config';
 import { CommandManager } from './core/commandManager';
 import { PurgeCommand } from './commands/purgeCommand';
 import { HelpCommand } from './commands/helpCommand';
+import { AdminCommand } from './commands/adminCommand';
 import { sendError } from './core/response';
 import { logger } from './utils/logger';
 import { LogArea, LogLevel } from './types/logger';
+import { DatabaseManager } from './services/DatabaseManager';
+import { AdminManager } from './config/admins';
 
 export class PurgeBot {
   private client: Client;
@@ -18,6 +21,9 @@ export class PurgeBot {
       consoleEnabled: true,
       minLevel: LogLevel.INFO
     });
+
+    // Initialize admin permissions
+    AdminManager.initialize();
 
     this.client = new Client({
       intents: [
@@ -37,6 +43,7 @@ export class PurgeBot {
   private registerCommands(): void {
     this.commandManager.register(new PurgeCommand());
     this.commandManager.register(new HelpCommand());
+    this.commandManager.register(new AdminCommand());
   }
 
   private updatePresence(): void {
@@ -117,14 +124,45 @@ export class PurgeBot {
     }
   }
 
-  private shutdown(): void {
-    logger.info(LogArea.STARTUP, 'Shutting down bot...');
-    this.client.destroy();
+  private async shutdown(): Promise<void> {
+    logger.info(LogArea.SHUTDOWN, 'Shutting down gracefully...');
+
+    // Disconnect from MongoDB
+    try {
+      const db = DatabaseManager.getInstance();
+      if (db.isConnected) {
+        await db.disconnect();
+        logger.info(LogArea.SHUTDOWN, 'MongoDB disconnected');
+      }
+    } catch (error) {
+      logger.error(LogArea.SHUTDOWN, `Error disconnecting from MongoDB: ${error}`);
+    }
+
+    await this.client.destroy();
+    logger.info(LogArea.SHUTDOWN, 'Bot shut down successfully');
     process.exit(0);
   }
 
   public async start(): Promise<void> {
     const config = getBotConfig();
+
+    // Connect to MongoDB if DATABASE_URL is provided
+    const databaseUrl = process.env.DATABASE_URL;
+    if (databaseUrl) {
+      logger.info(LogArea.STARTUP, 'Connecting to MongoDB...');
+      try {
+        const db = DatabaseManager.getInstance();
+        await db.connect(databaseUrl);
+        logger.enableDatabase();
+        logger.info(LogArea.STARTUP, 'MongoDB connected - error logging enabled');
+      } catch (error) {
+        logger.error(LogArea.STARTUP, `Failed to connect to MongoDB: ${error}`);
+        logger.warning(LogArea.STARTUP, 'Continuing without database error logging');
+      }
+    } else {
+      logger.warning(LogArea.STARTUP, 'DATABASE_URL not set - error logging disabled');
+    }
+
     await this.client.login(config.token);
   }
 }

@@ -250,11 +250,33 @@ export class PurgeService {
           } catch (error: any) {
             // May fail if bot lacks ManageThreads permission, continue with other threads
             if (error.code !== ERROR_CODES.MISSING_ACCESS) {
-              logger.error(LogArea.PURGE, `Failed to fetch private threads for ${channel.name}: ${error.message}`);
+              await logger.logError(
+                LogArea.PURGE,
+                `Failed to fetch private threads for channel ${channel.name}`,
+                error,
+                {
+                  channelId: channel.id,
+                  channelName: channel.name,
+                  guildId: channel.guild?.id,
+                  guildName: channel.guild?.name,
+                  metadata: { channelType: channel.type, threadType: 'private' }
+                }
+              );
             }
           }
         } catch (error: any) {
-          logger.error(LogArea.PURGE, `Failed to fetch threads for channel ${channel.name}: ${error.message}`);
+          await logger.logError(
+            LogArea.PURGE,
+            `Failed to fetch threads for channel ${channel.name}`,
+            error,
+            {
+              channelId: channel.id,
+              channelName: channel.name,
+              guildId: channel.guild?.id,
+              guildName: channel.guild?.name,
+              metadata: { channelType: channel.type }
+            }
+          );
         }
       }
     }

@@ -814,7 +814,24 @@ export class PurgeCommand extends BaseCommand {
         logger.error(LogArea.PURGE, `Purge ${wasCancelled ? 'cancelled' : 'failed'}: ${result.errors.join(', ')}`);
       }
     } catch (error: any) {
-      logger.error(LogArea.PURGE, `Error in purge operation ${operationId}: ${error.message}`);
+      await logger.logError(
+        LogArea.COMMANDS,
+        `Error during purge operation`,
+        error,
+        {
+          guildId: guild.id,
+          guildName: guild.name,
+          channelId: interaction.channelId,
+          userId: interaction.user.id,
+          command: `purge ${purgeOptions.type}`,
+          metadata: {
+            operationId,
+            targetId,
+            purgeType: purgeOptions.type,
+            skipChannelsCount: skipChannels.length
+          }
+        }
+      );
       await sendError(interaction, 'An unexpected error occurred during the purge operation.');
     } finally {
       operationManager.completeOperation(operationId);

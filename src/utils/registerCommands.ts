@@ -3,6 +3,7 @@ import { getBotConfig } from '../core/config';
 import { CommandManager } from '../core/commandManager';
 import { PurgeCommand } from '../commands/purgeCommand';
 import { HelpCommand } from '../commands/helpCommand';
+import { AdminCommand } from '../commands/adminCommand';
 import { logger } from './logger';
 import { LogArea } from '../types/logger';
 
@@ -20,24 +21,47 @@ async function registerCommands(): Promise<void> {
     }
 
     const commandManager = new CommandManager();
+    const adminGuildId = process.env.ADMIN_GUILD_ID;
+
+    // Register global commands (purge, help)
     commandManager.register(new PurgeCommand());
     commandManager.register(new HelpCommand());
 
-    const commands = commandManager.getAllCommands().map(cmd => cmd.buildCommand().toJSON());
+    const globalCommands = commandManager.getAllCommands().map(cmd => cmd.buildCommand().toJSON());
 
     const rest = new REST({ version: '10' }).setToken(config.token);
 
+    // Register global commands
     await rest.put(
       Routes.applicationCommands(clientId!),
-      { body: commands }
+      { body: globalCommands }
     );
 
-    const registeredCommands = commandManager.getAllCommands();
-
-    logger.info(LogArea.NONE, `Successfully registered ${registeredCommands.length} commands:`);
-    registeredCommands.forEach(cmd => {
+    logger.info(LogArea.NONE, `Successfully registered ${globalCommands.length} global commands:`);
+    commandManager.getAllCommands().forEach(cmd => {
       logger.info(LogArea.NONE, `  /${cmd.name} - ${cmd.description}`);
     });
+
+    // Register admin commands to guild if ADMIN_GUILD_ID is set
+    if (adminGuildId) {
+      const adminCommandManager = new CommandManager();
+      adminCommandManager.register(new AdminCommand());
+
+      const adminCommands = adminCommandManager.getAllCommands().map(cmd => cmd.buildCommand().toJSON());
+
+      await rest.put(
+        Routes.applicationGuildCommands(clientId!, adminGuildId),
+        { body: adminCommands }
+      );
+
+      logger.info(LogArea.NONE, `Successfully registered ${adminCommands.length} admin commands to guild ${adminGuildId}:`);
+      adminCommandManager.getAllCommands().forEach(cmd => {
+        logger.info(LogArea.NONE, `  /${cmd.name} - ${cmd.description}`);
+      });
+    } else {
+      logger.warning(LogArea.NONE, 'ADMIN_GUILD_ID not set - admin commands will not be registered');
+    }
+
     logger.spacer();
 
   } catch (error) {

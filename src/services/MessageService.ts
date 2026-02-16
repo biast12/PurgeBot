@@ -7,6 +7,8 @@ import { RateLimiter } from "../utils/RateLimiter";
 import { ContentFilter } from "./ContentFilter";
 import { batchOptimizer } from "./BatchOptimizer";
 import { threadArchiveService } from "./ThreadArchiveService";
+import { logger } from "../utils/logger";
+import { LogArea } from "../types/logger";
 
 export class MessageService {
   private rateLimiter: RateLimiter;
@@ -62,8 +64,19 @@ export class MessageService {
         lastMessageId = messages.last()?.id;
         if (!lastMessageId) break;
 
-      } catch (error) {
-        console.error(`Error fetching messages in channel ${channel.id}:`, error);
+      } catch (error: any) {
+        await logger.logError(
+          LogArea.SERVICES,
+          `Error fetching user messages in channel ${channel.id}`,
+          error,
+          {
+            channelId: channel.id,
+            channelName: channel.name,
+            guildId: channel.guild?.id,
+            guildName: channel.guild?.name,
+            metadata: { userId, operationType: 'fetchUserMessages' }
+          }
+        );
         break;
       }
     }
@@ -132,8 +145,19 @@ export class MessageService {
         lastMessageId = messages.last()?.id;
         if (!lastMessageId) break;
 
-      } catch (error) {
-        console.error(`Error fetching messages in channel ${channel.id}:`, error);
+      } catch (error: any) {
+        await logger.logError(
+          LogArea.SERVICES,
+          `Error fetching role messages in channel ${channel.id}`,
+          error,
+          {
+            channelId: channel.id,
+            channelName: channel.name,
+            guildId: channel.guild?.id,
+            guildName: channel.guild?.name,
+            metadata: { roleId, operationType: 'fetchRoleMessages' }
+          }
+        );
         break;
       }
     }
@@ -183,8 +207,19 @@ export class MessageService {
         lastMessageId = messages.last()?.id;
         if (!lastMessageId) break;
 
-      } catch (error) {
-        console.error(`Error fetching messages in channel ${channel.id}:`, error);
+      } catch (error: any) {
+        await logger.logError(
+          LogArea.SERVICES,
+          `Error fetching all messages in channel ${channel.id}`,
+          error,
+          {
+            channelId: channel.id,
+            channelName: channel.name,
+            guildId: channel.guild?.id,
+            guildName: channel.guild?.name,
+            metadata: { operationType: 'fetchAllMessages' }
+          }
+        );
         break;
       }
     }
@@ -238,8 +273,19 @@ export class MessageService {
         lastMessageId = messages.last()?.id;
         if (!lastMessageId) break;
 
-      } catch (error) {
-        console.error(`Error fetching messages in channel ${channel.id}:`, error);
+      } catch (error: any) {
+        await logger.logError(
+          LogArea.SERVICES,
+          `Error fetching inactive user messages in channel ${channel.id}`,
+          error,
+          {
+            channelId: channel.id,
+            channelName: channel.name,
+            guildId: guild.id,
+            guildName: guild.name,
+            metadata: { operationType: 'fetchInactiveUserMessages' }
+          }
+        );
         break;
       }
     }
@@ -345,7 +391,22 @@ export class MessageService {
           batchSuccess = true;
         }
       } catch (error: any) {
-        console.error(`Error bulk deleting messages:`, error);
+        await logger.logError(
+          LogArea.SERVICES,
+          `Error bulk deleting messages in channel ${channel.id}`,
+          error,
+          {
+            channelId: channel.id,
+            channelName: channel.name,
+            guildId: (channel as any).guild?.id,
+            guildName: (channel as any).guild?.name,
+            metadata: {
+              operationId,
+              chunkSize: chunk.length,
+              operationType: 'bulkDelete'
+            }
+          }
+        );
 
         // Check if it's a rate limit error
         if (error.code === ERROR_CODES.RATE_LIMITED || error.status === 429) {
@@ -416,10 +477,40 @@ export class MessageService {
       } catch (error: any) {
         // Enhanced error handling for threads
         if (error.code === ERROR_CODES.THREAD_ARCHIVED) {
-          console.error(`Thread became archived during deletion, stopping`);
+          await logger.logError(
+            LogArea.SERVICES,
+            `Thread became archived during deletion in channel ${_channel.id}`,
+            error,
+            {
+              channelId: _channel.id,
+              channelName: _channel.name,
+              guildId: (_channel as any).guild?.id,
+              guildName: (_channel as any).guild?.name,
+              metadata: {
+                operationId,
+                messageId: message.id,
+                operationType: 'individualDelete'
+              }
+            }
+          );
           break;
         } else if (error.code !== ERROR_CODES.UNKNOWN_MESSAGE) {
-          console.error(`Error deleting message ${message.id}:`, error);
+          await logger.logError(
+            LogArea.SERVICES,
+            `Error deleting message ${message.id} in channel ${_channel.id}`,
+            error,
+            {
+              channelId: _channel.id,
+              channelName: _channel.name,
+              guildId: (_channel as any).guild?.id,
+              guildName: (_channel as any).guild?.name,
+              metadata: {
+                operationId,
+                messageId: message.id,
+                operationType: 'individualDelete'
+              }
+            }
+          );
         }
       }
     }

@@ -16,6 +16,7 @@ Managing message history in Discord has never been easier. PurgeBot is the **pre
 - Filter by date range (1-30 days)
 - Server-wide, category, or channel-specific operations
 - Skip protected channels during bulk operations
+- Include threads in purge operations (automatically unarchives if needed)
 
 ### 💪 Powerful Features
 
@@ -110,6 +111,9 @@ PurgeBot respects Discord's permission system:
 
 # Delete messages starting with specific prefix (case-sensitive)
 /purge inactive target_id:category filter:"!" filter_mode:starts_with case_sensitive:true
+
+# Include threads when purging (will unarchive archived threads)
+/purge everyone target_id:channel include_threads:true days:7
 ```
 
 **Admin Commands** (Self-hosted only, requires setup):

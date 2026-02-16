@@ -64,6 +64,7 @@ export class HelpCommand extends BaseCommand {
               '**• target_id** - Where to purge (server/category/channel)\n' +
               '**• days** - Time limit (1-30 days)\n' +
               '**• skip_channels** - Exclude channels (category mode)\n' +
+              '**• include_threads** - Include messages from threads\n' +
               '**• user/role** - Target for specific commands'
             )
         )

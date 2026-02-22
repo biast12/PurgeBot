@@ -31,4 +31,5 @@ export const ERROR_CODES = {
   UNKNOWN_CHANNEL: 10003,
   MISSING_ACCESS: 50001,
   THREAD_ARCHIVED: 50083,
+  CHANNEL_NOT_CACHED: 'ChannelNotCached',
 } as const;

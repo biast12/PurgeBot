@@ -525,7 +525,17 @@ export class MessageService {
 
       try {
         await this.rateLimiter.execute(async () => {
-          await message.delete();
+          try {
+            await message.delete();
+          } catch (innerError: any) {
+            if (innerError.name === ERROR_CODES.CHANNEL_NOT_CACHED) {
+              // Channel was evicted from cache during a long operation — re-fetch it and retry once
+              await message.client.channels.fetch(message.channelId);
+              await message.delete();
+            } else {
+              throw innerError;
+            }
+          }
         }, `delete_${_channel.id}`, 0);
 
         deleted++;
@@ -558,7 +568,7 @@ export class MessageService {
             }
           );
           break;
-        } else if (error.code !== ERROR_CODES.UNKNOWN_MESSAGE) {
+        } else if (error.code !== ERROR_CODES.UNKNOWN_MESSAGE && error.name !== ERROR_CODES.CHANNEL_NOT_CACHED) {
           await logger.logError(
             LogArea.SERVICES,
             `Error deleting message ${message.id} in channel ${_channel.id}`,

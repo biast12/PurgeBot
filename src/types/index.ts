@@ -29,7 +29,7 @@ export interface PurgeOptions {
   userId?: string;
   roleId?: string;
   roleName?: string;
-  type?: 'user' | 'role' | 'everyone' | 'inactive';
+  type?: 'user' | 'role' | 'everyone' | 'inactive' | 'webhook';
   contentFilter?: ContentFilter;
   days?: number | null;
   skipChannels?: string[];

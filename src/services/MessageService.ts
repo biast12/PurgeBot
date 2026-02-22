@@ -296,6 +296,67 @@ export class MessageService {
     return inactiveMessages;
   }
 
+  async fetchWebhookMessages(
+    channel: any,
+    onCancel: () => boolean,
+    days?: number | null,
+    excludeMessageId?: string,
+    contentFilter?: ContentFilter
+  ): Promise<Message[]> {
+    const webhookMessages: Message[] = [];
+    let lastMessageId: string | undefined;
+    const cutoffTime = days ? Date.now() - (days * 24 * 60 * 60 * 1000) : 0;
+
+    while (!onCancel()) {
+      try {
+        const messages = await this.rateLimiter.execute(async () => {
+          return await channel.messages.fetch({
+            limit: CONSTANTS.FETCH_LIMIT,
+            before: lastMessageId
+          });
+        }, `fetch_${channel.id}`);
+
+        if (messages.size === 0) break;
+
+        messages.forEach((msg: Message) => {
+          if (excludeMessageId && msg.id === excludeMessageId) return;
+
+          if (msg.webhookId) {
+            if (!days || msg.createdTimestamp >= cutoffTime) {
+              if (!contentFilter || contentFilter.matches(msg)) {
+                webhookMessages.push(msg);
+              }
+            }
+          }
+        });
+
+        if (days && messages.last()?.createdTimestamp && messages.last()!.createdTimestamp < cutoffTime) {
+          break;
+        }
+
+        lastMessageId = messages.last()?.id;
+        if (!lastMessageId) break;
+
+      } catch (error: any) {
+        await logger.logError(
+          LogArea.SERVICES,
+          `Error fetching webhook messages in channel ${channel.id}`,
+          error,
+          {
+            channelId: channel.id,
+            channelName: channel.name,
+            guildId: channel.guild?.id,
+            guildName: channel.guild?.name,
+            metadata: { operationType: 'fetchWebhookMessages' }
+          }
+        );
+        break;
+      }
+    }
+
+    return webhookMessages;
+  }
+
   async deleteMessages(
     channel: TextBasedChannel,
     messages: Message[],

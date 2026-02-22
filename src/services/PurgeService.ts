@@ -386,6 +386,16 @@ export class PurgeService {
         );
         break;
 
+      case 'webhook':
+        messages = await messageService.fetchWebhookMessages(
+          channel,
+          () => operationManager.isOperationCancelled(operationId),
+          options.days,
+          excludeMessageId,
+          options.contentFilter
+        );
+        break;
+
       case 'inactive':
         messages = await messageService.fetchInactiveUserMessages(
           channel,

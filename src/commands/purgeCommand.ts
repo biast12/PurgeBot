@@ -293,6 +293,63 @@ export class PurgeCommand extends BaseCommand {
       )
       .addSubcommand(subcommand =>
         subcommand
+          .setName('webhook')
+          .setDescription('Delete all messages sent by webhooks')
+          .addStringOption(option =>
+            option
+              .setName('target_id')
+              .setDescription('The server, category, or channel to purge webhook messages from')
+              .setRequired(true)
+              .setAutocomplete(true)
+          )
+          .addIntegerOption(option =>
+            option
+              .setName('days')
+              .setDescription('Only delete messages from the last X days (1-30)')
+              .setRequired(false)
+              .setMinValue(1)
+              .setMaxValue(30)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter')
+              .setDescription('Only delete messages matching this filter (text or regex)')
+              .setRequired(false)
+          )
+          .addStringOption(option =>
+            option
+              .setName('filter_mode')
+              .setDescription('How to interpret the filter')
+              .setRequired(false)
+              .addChoices(
+                { name: 'Contains text', value: 'contains' },
+                { name: 'Regex pattern', value: 'regex' },
+                { name: 'Exact match', value: 'exact' },
+                { name: 'Starts with', value: 'starts_with' },
+                { name: 'Ends with', value: 'ends_with' }
+              )
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('case_sensitive')
+              .setDescription('Make filter case-sensitive (default: false)')
+              .setRequired(false)
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('skip_channels')
+              .setDescription('Skip specific channels when purging (category mode only)')
+              .setRequired(false)
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('include_threads')
+              .setDescription('Include messages from threads (default: false)')
+              .setRequired(false)
+          )
+      )
+      .addSubcommand(subcommand =>
+        subcommand
           .setName('deleted')
           .setDescription('Delete messages from deleted user accounts')
           .addStringOption(option =>
@@ -412,6 +469,9 @@ export class PurgeCommand extends BaseCommand {
         break;
       case 'inactive':
         await this.handleInactivePurge(context);
+        break;
+      case 'webhook':
+        await this.handleWebhookPurge(context);
         break;
       case 'deleted':
         await this.handleDeletedPurge(context);
@@ -684,6 +744,51 @@ export class PurgeCommand extends BaseCommand {
     }
   }
 
+  private async handleWebhookPurge(context: CommandContext): Promise<void> {
+    const { interaction } = context;
+    const guild = interaction.guild!;
+
+    const targetId = interaction.options.getString('target_id', true);
+    const days = interaction.options.getInteger('days');
+    const skipChannels = interaction.options.getBoolean('skip_channels') || false;
+    const includeThreads = interaction.options.getBoolean('include_threads') || false;
+
+    let contentFilter: ContentFilter | undefined;
+    try {
+      contentFilter = this.createContentFilter(interaction);
+    } catch (error: any) {
+      await sendError(interaction, error.message);
+      return;
+    }
+
+    const validation = await this.validationService.validateTarget(guild, targetId);
+    if (!validation.isValid) {
+      await sendError(interaction, validation.error || 'The specified target is not valid.');
+      return;
+    }
+
+    if (skipChannels && validation.targetType === 'category') {
+      const skipResult = await this.channelSkipHandler.handle(
+        interaction,
+        guild,
+        targetId,
+        validation.targetName!
+      );
+
+      if (!skipResult.proceed) return;
+
+      await this.startPurge(
+        context,
+        guild,
+        targetId,
+        { type: 'webhook', days, contentFilter, includeThreads },
+        skipResult.skippedChannels || []
+      );
+    } else {
+      await this.startPurge(context, guild, targetId, { type: 'webhook', days, contentFilter, includeThreads }, []);
+    }
+  }
+
   private async handleDeletedPurge(context: CommandContext): Promise<void> {
     const { interaction } = context;
     const guild = interaction.guild!;
@@ -779,6 +884,8 @@ export class PurgeCommand extends BaseCommand {
         targetDescription = 'everyone';
       } else if (purgeOptions.type === 'inactive') {
         targetDescription = 'inactive users';
+      } else if (purgeOptions.type === 'webhook') {
+        targetDescription = 'webhooks';
       }
 
       const target = targetId === guild.id ? guild : guild.channels.cache.get(targetId);

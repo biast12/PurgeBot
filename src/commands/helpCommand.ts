@@ -49,6 +49,7 @@ export class HelpCommand extends BaseCommand {
               '**`/purge role`** - Delete messages from role members\n' +
               '**`/purge everyone`** - Clear all messages (channel/category only)\n' +
               '**`/purge inactive`** - Remove messages from ex-members\n' +
+              '**`/purge webhook`** - Delete messages sent by webhooks\n' +
               '**`/purge deleted`** - Clean up deleted account messages'
             )
         )
@@ -65,6 +66,7 @@ export class HelpCommand extends BaseCommand {
               '**• days** - Time limit (1-30 days)\n' +
               '**• skip_channels** - Exclude channels (category mode)\n' +
               '**• include_threads** - Include messages from threads (default: false)\n' +
+              '**• include_bots** - Include bot messages (`role`, `everyone`, `inactive` only, default: false)\n' +
               '**• user/role** - Target for specific commands'
             )
         )

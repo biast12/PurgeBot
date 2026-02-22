@@ -12,20 +12,22 @@ Managing message history in Discord has never been easier. PurgeBot is the **pre
 
 ### 🎯 Surgical Precision
 
-- Target specific users, roles, or everyone
+- Target specific users, roles, webhooks, or everyone
 - Filter by date range (1-30 days)
 - Server-wide, category, or channel-specific operations
 - Skip protected channels during bulk operations
 - Include threads in purge operations (automatically unarchives if needed)
+- Include bot messages (`role`, `everyone`, `inactive`)
 
 ### 💪 Powerful Features
 
-#### **5 Specialized Purge Commands**
+#### **6 Specialized Purge Commands**
 
 - **`/purge user`** - Remove all messages from a specific user
 - **`/purge role`** - Clear messages from all members with a specific role
 - **`/purge everyone`** - Complete channel or category cleanup
 - **`/purge inactive`** - Clean up messages from users who left your server
+- **`/purge webhook`** - Remove all messages sent by webhooks
 - **`/purge deleted`** - Remove messages from deleted Discord accounts
 
 #### **🔍 Advanced Content Filtering**
@@ -114,6 +116,15 @@ PurgeBot respects Discord's permission system:
 
 # Include threads when purging (will unarchive archived threads)
 /purge everyone target_id:channel include_threads:true days:7
+
+# Include bot messages when purging a role
+/purge role target_id:server role:@bots include_bots:true
+
+# Remove all webhook messages from a channel
+/purge webhook target_id:channel
+
+# Remove recent webhook messages matching a pattern
+/purge webhook target_id:category days:7 filter:"alert" filter_mode:contains
 ```
 
 **Admin Commands** (Self-hosted only, requires setup):
@@ -121,6 +132,9 @@ PurgeBot respects Discord's permission system:
 ```bash
 # View recent errors
 /admin error list limit:25
+
+# View recent errors from a specific guild
+/admin error list limit:25 guild_id:1412752753348055111
 
 # Check specific error details
 /admin error check error_id:ABC12345

@@ -467,9 +467,7 @@ export class PurgeService {
       ChannelType.GuildText,
       ChannelType.GuildAnnouncement,
       ChannelType.GuildVoice,
-      ChannelType.GuildForum,
-      ChannelType.PublicThread,
-      ChannelType.PrivateThread
+      ChannelType.GuildForum
     ].includes(channel.type);
   }
 }

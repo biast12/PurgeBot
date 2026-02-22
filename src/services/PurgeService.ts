@@ -170,7 +170,7 @@ export class PurgeService {
       await guild.channels.fetch();
 
       for (const channel of guild.channels.cache.values()) {
-        if (this.isTextBasedChannel(channel) && !skipChannels.includes(channel.id)) {
+        if (this.isTextBasedChannel(channel) && !this.isThreadChannel(channel) && !skipChannels.includes(channel.id)) {
           try {
             const fetchedChannel = await guild.channels.fetch(channel.id);
             if (fetchedChannel && this.isTextBasedChannel(fetchedChannel)) {
@@ -201,6 +201,7 @@ export class PurgeService {
         for (const channel of guild.channels.cache.values()) {
           if (channel.parentId === targetId &&
             this.isTextBasedChannel(channel) &&
+            !this.isThreadChannel(channel) &&
             !skipChannels.includes(channel.id)) {
             try {
               const fetchedChannel = await guild.channels.fetch(channel.id);
@@ -475,12 +476,19 @@ export class PurgeService {
     return totalDeleted;
   }
 
+  private isThreadChannel(channel: any): boolean {
+    return channel.type === ChannelType.PublicThread ||
+           channel.type === ChannelType.PrivateThread;
+  }
+
   private isTextBasedChannel(channel: any): boolean {
     return [
       ChannelType.GuildText,
       ChannelType.GuildAnnouncement,
       ChannelType.GuildVoice,
-      ChannelType.GuildForum
+      ChannelType.GuildForum,
+      ChannelType.PublicThread,
+      ChannelType.PrivateThread
     ].includes(channel.type);
   }
 }

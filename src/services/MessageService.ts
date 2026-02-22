@@ -259,7 +259,7 @@ export class MessageService {
         messages.forEach((msg: Message) => {
           if (excludeMessageId && msg.id === excludeMessageId) return;
 
-          if (!msg.system && (includeBots || !msg.author.bot) && !currentMembers.has(msg.author.id)) {
+          if (!msg.system && !msg.webhookId && (includeBots || !msg.author.bot) && !currentMembers.has(msg.author.id)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
               if (!contentFilter || contentFilter.matches(msg)) {

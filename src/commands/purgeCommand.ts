@@ -92,7 +92,7 @@ export class PurgeCommand extends BaseCommand {
           .addBooleanOption(option =>
             option
               .setName('include_threads')
-              .setDescription('Include messages from threads')
+              .setDescription('Include messages from threads (default: false)')
               .setRequired(false)
           )
       )
@@ -155,7 +155,7 @@ export class PurgeCommand extends BaseCommand {
           .addBooleanOption(option =>
             option
               .setName('include_threads')
-              .setDescription('Include messages from threads')
+              .setDescription('Include messages from threads (default: false)')
               .setRequired(false)
           )
       )
@@ -212,7 +212,7 @@ export class PurgeCommand extends BaseCommand {
           .addBooleanOption(option =>
             option
               .setName('include_threads')
-              .setDescription('Include messages from threads')
+              .setDescription('Include messages from threads (default: false)')
               .setRequired(false)
           )
       )
@@ -269,7 +269,7 @@ export class PurgeCommand extends BaseCommand {
           .addBooleanOption(option =>
             option
               .setName('include_threads')
-              .setDescription('Include messages from threads')
+              .setDescription('Include messages from threads (default: false)')
               .setRequired(false)
           )
       )
@@ -326,7 +326,7 @@ export class PurgeCommand extends BaseCommand {
           .addBooleanOption(option =>
             option
               .setName('include_threads')
-              .setDescription('Include messages from threads')
+              .setDescription('Include messages from threads (default: false)')
               .setRequired(false)
           )
       )

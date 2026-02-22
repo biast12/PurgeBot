@@ -158,6 +158,12 @@ export class PurgeCommand extends BaseCommand {
               .setDescription('Include messages from threads (default: false)')
               .setRequired(false)
           )
+          .addBooleanOption(option =>
+            option
+              .setName('include_bots')
+              .setDescription('Also delete messages from bots (default: false)')
+              .setRequired(false)
+          )
       )
       .addSubcommand(subcommand =>
         subcommand
@@ -215,6 +221,12 @@ export class PurgeCommand extends BaseCommand {
               .setDescription('Include messages from threads (default: false)')
               .setRequired(false)
           )
+          .addBooleanOption(option =>
+            option
+              .setName('include_bots')
+              .setDescription('Also delete messages from bots (default: false)')
+              .setRequired(false)
+          )
       )
       .addSubcommand(subcommand =>
         subcommand
@@ -270,6 +282,12 @@ export class PurgeCommand extends BaseCommand {
             option
               .setName('include_threads')
               .setDescription('Include messages from threads (default: false)')
+              .setRequired(false)
+          )
+          .addBooleanOption(option =>
+            option
+              .setName('include_bots')
+              .setDescription('Also delete messages from bots (default: false)')
               .setRequired(false)
           )
       )
@@ -515,6 +533,7 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
     const includeThreads = interaction.options.getBoolean('include_threads') || false;
+    const includeBots = interaction.options.getBoolean('include_bots') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -536,7 +555,8 @@ export class PurgeCommand extends BaseCommand {
       roleName: role.name,
       days,
       contentFilter,
-      includeThreads
+      includeThreads,
+      includeBots
     };
 
     if (skipChannels && validation.targetType === 'category') {
@@ -575,6 +595,7 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
     const includeThreads = interaction.options.getBoolean('include_threads') || false;
+    const includeBots = interaction.options.getBoolean('include_bots') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -609,11 +630,11 @@ export class PurgeCommand extends BaseCommand {
         context,
         guild,
         targetId,
-        { type: 'everyone', days, contentFilter, includeThreads },
+        { type: 'everyone', days, contentFilter, includeThreads, includeBots },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'everyone', days, contentFilter, includeThreads }, []);
+      await this.startPurge(context, guild, targetId, { type: 'everyone', days, contentFilter, includeThreads, includeBots }, []);
     }
   }
 
@@ -625,6 +646,7 @@ export class PurgeCommand extends BaseCommand {
     const days = interaction.options.getInteger('days');
     const skipChannels = interaction.options.getBoolean('skip_channels') || false;
     const includeThreads = interaction.options.getBoolean('include_threads') || false;
+    const includeBots = interaction.options.getBoolean('include_bots') || false;
 
     let contentFilter: ContentFilter | undefined;
     try {
@@ -654,11 +676,11 @@ export class PurgeCommand extends BaseCommand {
         context,
         guild,
         targetId,
-        { type: 'inactive', days, contentFilter, includeThreads },
+        { type: 'inactive', days, contentFilter, includeThreads, includeBots },
         skipResult.skippedChannels || []
       );
     } else {
-      await this.startPurge(context, guild, targetId, { type: 'inactive', days, contentFilter, includeThreads }, []);
+      await this.startPurge(context, guild, targetId, { type: 'inactive', days, contentFilter, includeThreads, includeBots }, []);
     }
   }
 

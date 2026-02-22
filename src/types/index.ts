@@ -35,6 +35,7 @@ export interface PurgeOptions {
   skipChannels?: string[];
   excludeMessageId?: string;
   includeThreads?: boolean;
+  includeBots?: boolean;
 }
 
 export interface PurgeProgress {

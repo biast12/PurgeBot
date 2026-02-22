@@ -370,7 +370,8 @@ export class PurgeService {
           options.days,
           guild,
           excludeMessageId,
-          options.contentFilter
+          options.contentFilter,
+          options.includeBots
         );
         break;
 
@@ -380,7 +381,8 @@ export class PurgeService {
           () => operationManager.isOperationCancelled(operationId),
           options.days,
           excludeMessageId,
-          options.contentFilter
+          options.contentFilter,
+          options.includeBots
         );
         break;
 
@@ -391,7 +393,8 @@ export class PurgeService {
           () => operationManager.isOperationCancelled(operationId),
           options.days,
           excludeMessageId,
-          options.contentFilter
+          options.contentFilter,
+          options.includeBots
         );
         break;
 

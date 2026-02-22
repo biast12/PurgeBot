@@ -91,7 +91,8 @@ export class MessageService {
     days?: number | null,
     guild?: any,
     excludeMessageId?: string,
-    contentFilter?: ContentFilter
+    contentFilter?: ContentFilter,
+    includeBots: boolean = false
   ): Promise<Message[]> {
     const roleMessages: Message[] = [];
     let lastMessageId: string | undefined;
@@ -128,7 +129,7 @@ export class MessageService {
             }
           }
 
-          if (member && member.roles.cache.has(roleId)) {
+          if (member && member.roles.cache.has(roleId) && (includeBots || !msg.author.bot)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
               if (!contentFilter || contentFilter.matches(msg)) {
@@ -170,7 +171,8 @@ export class MessageService {
     onCancel: () => boolean,
     days?: number | null,
     excludeMessageId?: string,
-    contentFilter?: ContentFilter
+    contentFilter?: ContentFilter,
+    includeBots: boolean = false
   ): Promise<Message[]> {
     const allMessages: Message[] = [];
     let lastMessageId: string | undefined;
@@ -190,7 +192,7 @@ export class MessageService {
         messages.forEach((msg: Message) => {
           if (excludeMessageId && msg.id === excludeMessageId) return;
 
-          if (!msg.system) {
+          if (!msg.system && (includeBots || !msg.author.bot)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
               if (!contentFilter || contentFilter.matches(msg)) {
@@ -233,7 +235,8 @@ export class MessageService {
     onCancel: () => boolean,
     days?: number | null,
     excludeMessageId?: string,
-    contentFilter?: ContentFilter
+    contentFilter?: ContentFilter,
+    includeBots: boolean = false
   ): Promise<Message[]> {
     const inactiveMessages: Message[] = [];
     let lastMessageId: string | undefined;
@@ -256,7 +259,7 @@ export class MessageService {
         messages.forEach((msg: Message) => {
           if (excludeMessageId && msg.id === excludeMessageId) return;
 
-          if (!msg.system && !msg.author.bot && !currentMembers.has(msg.author.id)) {
+          if (!msg.system && (includeBots || !msg.author.bot) && !currentMembers.has(msg.author.id)) {
             if (!days || msg.createdTimestamp >= cutoffTime) {
               // Apply content filter if provided
               if (!contentFilter || contentFilter.matches(msg)) {

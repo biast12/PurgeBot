@@ -282,12 +282,17 @@ export class BotLogger {
   /**
    * Get recent errors
    */
-  async getRecentErrors(limit: number = 10): Promise<ErrorDocument[]> {
+  async getRecentErrors(limit: number = 10, guildId?: string): Promise<ErrorDocument[]> {
     if (!this.dbEnabled) return [];
 
     try {
+      const query: any = {};
+      if (guildId) {
+        query.guild_id = guildId;
+      }
+
       return await this.db.errors
-        .find()
+        .find(query)
         .sort({ timestamp: -1 })
         .limit(limit)
         .toArray() as ErrorDocument[];

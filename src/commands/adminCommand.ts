@@ -39,6 +39,12 @@ export class AdminCommand extends BaseCommand {
                   .setMinValue(1)
                   .setMaxValue(25)
               )
+              .addStringOption(opt =>
+                opt
+                  .setName('guild_id')
+                  .setDescription('Filter errors by guild ID')
+                  .setRequired(false)
+              )
           )
           .addSubcommand(sub =>
             sub
@@ -208,8 +214,9 @@ export class AdminCommand extends BaseCommand {
 
   private async handleErrorList(interaction: ChatInputCommandInteraction): Promise<void> {
     const limit = interaction.options.getInteger('limit') || 10;
+    const guildId = interaction.options.getString('guild_id') || undefined;
 
-    const errors = await logger.getRecentErrors(limit);
+    const errors = await logger.getRecentErrors(limit, guildId);
 
     if (errors.length === 0) {
       const embed = new EmbedBuilder()

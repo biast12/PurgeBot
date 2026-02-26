@@ -20,6 +20,7 @@ import { BaseCommand } from '../core/command';
 import { CommandContext } from '../types';
 import { sendError } from '../core/response';
 import { customizationService } from '../services/CustomizationService';
+import { getBotConfig } from '../core/config';
 import { logger } from '../utils/logger';
 import { LogArea } from '../types/logger';
 
@@ -51,7 +52,7 @@ export class CustomizeCommand extends BaseCommand {
 
     // Check premium (guild subscription) entitlement
     if (!customizationService.hasPremiumAccess(interaction)) {
-      const skuId = process.env.PREMIUM_SKU_ID;
+      const { premiumSkuId } = getBotConfig();
 
       const mainContainer = new ContainerBuilder()
         .addTextDisplayComponents(
@@ -68,11 +69,11 @@ export class CustomizeCommand extends BaseCommand {
 
       const components: any[] = [mainContainer];
 
-      if (skuId) {
+      if (premiumSkuId) {
         const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
             .setStyle(ButtonStyle.Premium)
-            .setSKUId(skuId)
+            .setSKUId(premiumSkuId)
         );
         components.push(row);
       }

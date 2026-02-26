@@ -1,3 +1,5 @@
+import { getBotConfig } from '../core/config';
+
 /**
  * Admin permission management for authorized admins
  */
@@ -5,18 +7,17 @@ export class AdminManager {
   private static admins: Set<string> = new Set();
 
   /**
-   * Initialize admin permissions from environment variables
+   * Initialize admin permissions from config.json
    */
   static initialize(): void {
-    // Load admins from env (comma-separated)
-    const adminIds = process.env.ADMIN_IDS;
+    const { adminIds } = getBotConfig();
     if (adminIds) {
-      adminIds.split(',').forEach(id => this.admins.add(id.trim()));
+      adminIds.forEach(id => this.admins.add(id.trim()));
     }
 
     // Warn if no admins are configured
     if (this.admins.size === 0) {
-      console.warn('⚠️  WARNING: No admin users configured. Set ADMIN_IDS in .env to use admin commands.');
+      console.warn('⚠️  WARNING: No admin users configured. Set "adminIds" in config.json to use admin commands.');
     }
   }
 

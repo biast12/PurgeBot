@@ -1,36 +1,54 @@
-import * as dotenv from 'dotenv';
-
-dotenv.config();
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface BotConfig {
   token: string;
   clientId?: string;
+  databaseUrl?: string;
+  adminIds?: string[];
+  adminGuildId?: string;
+  premiumSkuId?: string;
 }
 
 let config: BotConfig | null = null;
 
-export function validateConfig(): void {
-  const token = process.env.TOKEN;
+function loadConfigFile(): Record<string, unknown> {
+  const configPath = path.join(process.cwd(), 'config.json');
+  if (!fs.existsSync(configPath)) {
+    throw new Error('config.json not found. Copy config.example.json to config.json and fill in your values.');
+  }
+  try {
+    return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  } catch {
+    throw new Error('config.json is not valid JSON.');
+  }
+}
 
+export function validateConfig(): void {
+  const raw = loadConfigFile();
+
+  const token = raw.token as string | undefined;
   if (!token || token.length === 0) {
-    throw new Error('Missing TOKEN in environment variables. Please set it in the .env file.');
+    throw new Error('Missing "token" in config.json.');
   }
 
-  // Extract client ID from token if not provided
-  let clientId = process.env.CLIENT_ID;
+  // Extract client ID from token if not explicitly provided
+  let clientId = raw.clientId as string | undefined;
   if (!clientId) {
     try {
-      // Discord tokens are base64 encoded and the client ID is the first part
-      const tokenParts = Buffer.from(token.split('.')[0], 'base64').toString();
-      clientId = tokenParts;
+      clientId = Buffer.from(token.split('.')[0], 'base64').toString();
     } catch {
-      // If we can't extract it, we'll get it from the API later
+      // Will be fetched from the API later
     }
   }
 
   config = {
     token,
-    clientId
+    clientId,
+    databaseUrl: raw.databaseUrl as string | undefined,
+    adminIds: raw.adminIds as string[] | undefined,
+    adminGuildId: raw.adminGuildId as string | undefined,
+    premiumSkuId: raw.premiumSkuId as string | undefined,
   };
 }
 

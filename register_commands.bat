@@ -37,11 +37,11 @@ IF NOT EXIST "node_modules" (
     ECHO.
 )
 
-REM Check if .env file exists
-IF NOT EXIST ".env" (
-    ECHO [ERROR] .env file not found.
-    ECHO Please create a .env file with your bot configuration.
-    ECHO You can copy .env.example to .env and modify it.
+REM Check if config.json file exists
+IF NOT EXIST "config.json" (
+    ECHO [ERROR] config.json file not found.
+    ECHO Please create a config.json file with your bot configuration.
+    ECHO You can copy config.example.json to config.json and modify it.
     PAUSE
     EXIT /B 1
 )
@@ -77,7 +77,7 @@ IF %ERRORLEVEL% EQU 0 (
     ECHO ============================================
     ECHO [ERROR] Registration failed with error code %ERRORLEVEL%
     ECHO ============================================
-    ECHO Please check your bot token and environment configuration.
+    ECHO Please check your bot token and config.json configuration.
 )
 
 ECHO.

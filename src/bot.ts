@@ -157,10 +157,9 @@ export class PurgeBot {
   }
 
   public async start(): Promise<void> {
-    const config = getBotConfig();
+    const { databaseUrl, token } = getBotConfig();
 
-    // Connect to MongoDB if DATABASE_URL is provided
-    const databaseUrl = process.env.DATABASE_URL;
+    // Connect to MongoDB if databaseUrl is provided
     if (databaseUrl) {
       logger.info(LogArea.STARTUP, 'Connecting to MongoDB...');
       try {
@@ -176,7 +175,7 @@ export class PurgeBot {
       logger.warning(LogArea.STARTUP, 'DATABASE_URL not set - error logging disabled');
     }
 
-    await this.client.login(config.token);
+    await this.client.login(token);
   }
 }
 

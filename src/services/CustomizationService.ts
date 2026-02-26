@@ -1,13 +1,13 @@
-import { Collection } from 'discord.js';
+import { Collection, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder } from 'discord.js';
 import { DatabaseManager } from './DatabaseManager';
 import { CustomizationDocument } from '../models/CustomizationDocument';
-import { SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder } from 'discord.js';
+import { getBotConfig } from '../core/config';
 
 export class CustomizationService {
   private static instance: CustomizationService;
   private cache = new Map<string, CustomizationDocument | null>();
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): CustomizationService {
     if (!CustomizationService.instance) {
@@ -20,9 +20,9 @@ export class CustomizationService {
    * Check if an interaction has premium (guild subscription) entitlement
    */
   hasPremiumAccess(interaction: { entitlements: Collection<string, any> }): boolean {
-    const skuId = process.env.PREMIUM_SKU_ID;
-    if (!skuId) return false;
-    return interaction.entitlements.some((e: any) => e.skuId === skuId);
+    const { premiumSkuId } = getBotConfig();
+    if (!premiumSkuId) return false;
+    return interaction.entitlements.some((e: any) => e.skuId === premiumSkuId);
   }
 
   /**

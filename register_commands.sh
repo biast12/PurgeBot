@@ -37,11 +37,11 @@ if [ ! -d "node_modules" ]; then
     echo
 fi
 
-# Check if .env file exists
-if [ ! -f ".env" ]; then
-    echo -e "${RED}[ERROR] .env file not found.${NC}"
-    echo "Please create a .env file with your bot configuration."
-    echo "You can copy .env.example to .env and modify it."
+# Check if config.json file exists
+if [ ! -f "config.json" ]; then
+    echo -e "${RED}[ERROR] config.json file not found.${NC}"
+    echo "Please create a config.json file with your bot configuration."
+    echo "You can copy config.example.json to config.json and modify it."
     exit 1
 fi
 
@@ -76,7 +76,7 @@ else
     echo "============================================"
     echo -e "${RED}[ERROR] Registration failed with error code $EXIT_CODE${NC}"
     echo "============================================"
-    echo "Please check your bot token and environment configuration."
+    echo "Please check your bot token and config.json configuration."
 fi
 
 echo

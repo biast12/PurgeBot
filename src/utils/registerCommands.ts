@@ -23,7 +23,7 @@ async function registerCommands(): Promise<void> {
     }
 
     const commandManager = new CommandManager();
-    const adminGuildId = process.env.ADMIN_GUILD_ID;
+    const adminGuildId = config.adminGuildId;
 
     // Register global commands (purge, help, customize)
     commandManager.register(new PurgeCommand());
@@ -62,7 +62,7 @@ async function registerCommands(): Promise<void> {
         logger.info(LogArea.NONE, `  /${cmd.name} - ${cmd.description}`);
       });
     } else {
-      logger.warning(LogArea.NONE, 'ADMIN_GUILD_ID not set - admin commands will not be registered');
+      logger.warning(LogArea.NONE, 'adminGuildId not set - admin commands will not be registered');
     }
 
     logger.spacer();
@@ -77,8 +77,6 @@ async function registerCommands(): Promise<void> {
 }
 
 if (require.main === module) {
-  require('dotenv').config();
-
   const { validateConfig } = require('../core/config');
   validateConfig();
 

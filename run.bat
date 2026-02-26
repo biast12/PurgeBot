@@ -32,11 +32,11 @@ IF NOT EXIST "dist\bot.js" (
     EXIT /B 1
 )
 
-REM Check if .env file exists
-IF NOT EXIST ".env" (
-    ECHO [ERROR] .env file not found.
-    ECHO Please create a .env file with your bot configuration.
-    ECHO You can copy .env.example to .env and modify it.
+REM Check if config.json file exists
+IF NOT EXIST "config.json" (
+    ECHO [ERROR] config.json file not found.
+    ECHO Please create a config.json file with your bot configuration.
+    ECHO You can copy config.example.json to config.json and modify it.
     PAUSE
     EXIT /B 1
 )

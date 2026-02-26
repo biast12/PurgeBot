@@ -194,30 +194,28 @@ cd PurgeBot
 npm install
 ```
 
-3. Configure your environment (create `.env` file):
+3. Configure your bot (create `config.json` from `config.example.json`):
 
-```env
-# Required
-TOKEN=your_bot_token_here
+```json
+{
+  "token": "your_bot_token_here",
 
-# Optional - Error Logging & Customization (requires MongoDB Atlas)
-DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/PurgeBot
+  "databaseUrl": "mongodb+srv://username:password@cluster.mongodb.net/PurgeBot",
 
-# Optional - Admin Commands
-ADMIN_IDS=your_discord_user_id,other_admin_ids
-ADMIN_GUILD_ID=your_support_server_id
+  "adminIds": ["your_discord_user_id", "other_admin_id"],
+  "adminGuildId": "your_support_server_id",
 
-# Optional - Premium Features (/customize command)
-PREMIUM_SKU_ID=your_sku_id_here
+  "premiumSkuId": "your_sku_id_here"
+}
 ```
 
-**Environment Variables:**
+**Config Fields:**
 
-- `TOKEN` - Your Discord bot token (required)
-- `DATABASE_URL` - MongoDB connection string for error logging and customization storage (optional)
-- `ADMIN_IDS` - Comma-separated Discord user IDs authorized for admin commands (optional)
-- `ADMIN_GUILD_ID` - Guild ID where admin commands are registered (optional)
-- `PREMIUM_SKU_ID` - Discord SKU ID for the Server Subscription (optional, enables `/customize`)
+- `token` - Your Discord bot token (required)
+- `databaseUrl` - MongoDB connection string for error logging and customization storage (optional)
+- `adminIds` - Array of Discord user IDs authorized for admin commands (optional)
+- `adminGuildId` - Guild ID where admin commands are registered (optional)
+- `premiumSkuId` - Discord SKU ID for the Server Subscription (optional, enables `/customize`)
 
 4. Register commands:
 
@@ -251,10 +249,12 @@ PurgeBot can persist errors to MongoDB Atlas for remote debugging and analysis:
    - Copy the connection string
    - Replace `<password>` with your database user's password
 
-4. **Add to `.env`:**
+4. **Add to `config.json`:**
 
-   ```env
-   DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/PurgeBot
+   ```json
+   {
+     "databaseUrl": "mongodb+srv://username:password@cluster.mongodb.net/PurgeBot"
+   }
    ```
 
 **Error Logging Features:**
@@ -274,11 +274,13 @@ Configure admin commands for remote bot management:
 2. **Get Your Admin Guild ID:**
    - Right-click your support server → "Copy Server ID"
 
-3. **Add to `.env`:**
+3. **Add to `config.json`:**
 
-   ```env
-   ADMIN_IDS=648679147085889536,1356612233878179921
-   ADMIN_GUILD_ID=1412752753348055111
+   ```json
+   {
+     "adminIds": ["648679147085889536", "1356612233878179921"],
+     "adminGuildId": "1412752753348055111"
+   }
    ```
 
 4. **Register Commands:**
@@ -293,7 +295,7 @@ Configure admin commands for remote bot management:
 
 #### Admin Commands Not Appearing
 
-- Verify `ADMIN_GUILD_ID` is set correctly in `.env`
+- Verify `adminGuildId` is set correctly in `config.json`
 - Run `npm run register` after changing configuration
 - Admin commands only appear in the specified guild, not globally
 

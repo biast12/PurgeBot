@@ -98,7 +98,6 @@ export class CustomizeCommand extends BaseCommand {
           .setTextInputComponent(
             new TextInputBuilder()
               .setCustomId('bot_name')
-              .setLabel('Bot Name')
               .setStyle(TextInputStyle.Short)
               .setRequired(false)
               .setMaxLength(32)

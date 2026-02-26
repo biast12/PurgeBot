@@ -15,6 +15,7 @@ import {
   MessageFlags,
   InteractionContextType,
   ModalSubmitInteraction,
+  Guild,
 } from 'discord.js';
 import { BaseCommand } from '../core/command';
 import { CommandContext } from '../types';
@@ -32,7 +33,15 @@ export class CustomizeCommand extends BaseCommand {
     return new SlashCommandBuilder()
       .setName(this.name)
       .setDescription(this.description)
-      .setContexts(InteractionContextType.Guild) as SlashCommandBuilder;
+      .setContexts(InteractionContextType.Guild)
+      .addSubcommand(sub => sub
+        .setName('edit')
+        .setDescription('Edit the bot\'s name, avatar, and branding for this server')
+      )
+      .addSubcommand(sub => sub
+        .setName('clear')
+        .setDescription('Reset the bot\'s name and avatar back to defaults for this server')
+      ) as SlashCommandBuilder;
   }
 
   public async execute(context: CommandContext): Promise<void> {
@@ -78,13 +87,23 @@ export class CustomizeCommand extends BaseCommand {
         components.push(row);
       }
 
-      await interaction.editReply({
+      await interaction.reply({
         components,
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral] as any,
       });
       return;
     }
 
+    const subcommand = (interaction as any).options.getSubcommand();
+
+    if (subcommand === 'edit') {
+      await this.executeEdit(interaction, guild);
+    } else if (subcommand === 'clear') {
+      await this.executeClear(interaction, guild);
+    }
+  }
+
+  private async executeEdit(interaction: any, guild: Guild): Promise<void> {
     // Load current settings to pre-fill the modal
     const current = await customizationService.getGuildCustomization(guild.id);
 
@@ -138,6 +157,57 @@ export class CustomizeCommand extends BaseCommand {
       );
 
     await interaction.showModal(modal);
+  }
+
+  private async executeClear(interaction: any, guild: Guild): Promise<void> {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    const errors: string[] = [];
+    const applied: string[] = [];
+
+    // Reset nickname and avatar via PATCH /guilds/{id}/members/@me
+    try {
+      await guild.members.editMe({ nick: null, avatar: null });
+      applied.push('**Bot Name:** Reset to default');
+      applied.push('**Bot Avatar:** Reset to default');
+    } catch (err) {
+      errors.push('Failed to reset name/avatar. Ensure I have **Manage Nicknames** permission.');
+      logger.error(LogArea.COMMANDS, `Failed to editMe (clear) for guild ${guild.id}: ${err}`);
+    }
+
+    // Preserve branding setting, remove name and avatar from DB
+    const existing = await customizationService.getGuildCustomization(guild.id);
+    try {
+      await customizationService.saveGuildCustomization(guild.id, {
+        updated_by: interaction.user.id,
+        remove_branding: existing?.remove_branding ?? false,
+      });
+      applied.push('**Branding:** Setting preserved');
+    } catch (err) {
+      errors.push('Failed to save settings to database.');
+      logger.error(LogArea.COMMANDS, `Failed to save customization (clear) for guild ${guild.id}: ${err}`);
+    }
+
+    const lines: string[] = ['# ✅ Bot Reset\n'];
+
+    if (applied.length > 0) {
+      lines.push('**Cleared:**');
+      applied.forEach(a => lines.push(`• ${a}`));
+    }
+
+    if (errors.length > 0) {
+      lines.push('\n**⚠️ Some changes failed:**');
+      errors.forEach(e => lines.push(`• ${e}`));
+    }
+
+    await interaction.editReply({
+      components: [
+        new ContainerBuilder().addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(lines.join('\n'))
+        )
+      ],
+      flags: MessageFlags.IsComponentsV2 as any,
+    });
   }
 
   public async handleModalSubmit(interaction: ModalSubmitInteraction): Promise<void> {
@@ -265,14 +335,12 @@ export class CustomizeCommand extends BaseCommand {
       errors.forEach(e => lines.push(`• ${e}`));
     }
 
-    const components: any[] = [
-      new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(lines.join('\n'))
-      )
-    ];
-
     await interaction.editReply({
-      components,
+      components: [
+        new ContainerBuilder().addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(lines.join('\n'))
+        )
+      ],
       flags: MessageFlags.IsComponentsV2 as any,
     });
   }

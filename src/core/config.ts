@@ -8,6 +8,7 @@ export interface BotConfig {
   adminIds?: string[];
   adminGuildId?: string;
   premiumSkuId?: string;
+  freePremiumGuildIds?: string[];
 }
 
 let config: BotConfig | null = null;
@@ -56,6 +57,7 @@ export function validateConfig(): void {
     adminIds: toStringArray(raw.adminIds),
     adminGuildId: raw.adminGuildId != null ? String(raw.adminGuildId) : undefined,
     premiumSkuId: raw.premiumSkuId != null ? String(raw.premiumSkuId) : undefined,
+    freePremiumGuildIds: toStringArray(raw.freePremiumGuildIds),
   };
 }
 

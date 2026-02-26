@@ -19,8 +19,10 @@ export class CustomizationService {
   /**
    * Check if an interaction has premium (guild subscription) entitlement
    */
-  hasPremiumAccess(interaction: { entitlements: Collection<string, any> }): boolean {
-    const { premiumSkuId } = getBotConfig();
+  hasPremiumAccess(interaction: { entitlements: Collection<string, any>; guildId?: string | null }): boolean {
+    const { premiumSkuId, freePremiumGuildIds } = getBotConfig();
+
+    if (interaction.guildId && freePremiumGuildIds?.includes(interaction.guildId)) return true;
     if (!premiumSkuId) return false;
     return interaction.entitlements.some((e: any) => e.skuId === premiumSkuId);
   }

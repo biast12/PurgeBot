@@ -6,5 +6,7 @@
   "adminIds": ["your_discord_user_id", "other_admin_id"],
   "adminGuildId": "your_support_server_id",
 
-  "premiumSkuId": "your_sku_id_here"
+  "premiumSkuId": "your_sku_id_here",
+
+  "freePremiumGuildIds": ["guild_id_1", "guild_id_2"]
 }

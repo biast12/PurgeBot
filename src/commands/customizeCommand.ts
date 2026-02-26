@@ -78,7 +78,7 @@ export class CustomizeCommand extends BaseCommand {
         components.push(row);
       }
 
-      await interaction.reply({
+      await interaction.editReply({
         components,
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral] as any,
       });
@@ -145,8 +145,7 @@ export class CustomizeCommand extends BaseCommand {
     if (!guild) return;
 
     // Re-validate admin permission
-    const member = await guild.members.fetch(interaction.user.id).catch(() => null);
-    if (!member?.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
       await interaction.reply({
         components: [
           new TextDisplayBuilder()

@@ -18,7 +18,11 @@ function loadConfigFile(): Record<string, unknown> {
     throw new Error('config.json not found. Copy config.example.json to config.json and fill in your values.');
   }
   try {
-    return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    const raw = fs.readFileSync(configPath, 'utf-8');
+    // Wrap bare large integers (15+ digits) in quotes before parsing to prevent
+    // JS from losing precision on Discord snowflake IDs (which are 64-bit ints)
+    const safe = raw.replace(/(?<!")(\b\d{15,}\b)(?!")/g, '"$1"');
+    return JSON.parse(safe);
   } catch {
     throw new Error('config.json is not valid JSON.');
   }
@@ -42,13 +46,16 @@ export function validateConfig(): void {
     }
   }
 
+  const toStringArray = (val: unknown): string[] | undefined =>
+    Array.isArray(val) ? val.map(String) : undefined;
+
   config = {
     token,
     clientId,
     databaseUrl: raw.databaseUrl as string | undefined,
-    adminIds: raw.adminIds as string[] | undefined,
-    adminGuildId: raw.adminGuildId as string | undefined,
-    premiumSkuId: raw.premiumSkuId as string | undefined,
+    adminIds: toStringArray(raw.adminIds),
+    adminGuildId: raw.adminGuildId != null ? String(raw.adminGuildId) : undefined,
+    premiumSkuId: raw.premiumSkuId != null ? String(raw.premiumSkuId) : undefined,
   };
 }
 

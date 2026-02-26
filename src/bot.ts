@@ -81,6 +81,7 @@ export class PurgeBot {
     });
 
     this.client.on('guildDelete', (guild) => {
+      if (!guild.available) return;
       logger.info(LogArea.STARTUP, `Left guild: ${guild.name} (${guild.id})`);
       this.updatePresence();
     });

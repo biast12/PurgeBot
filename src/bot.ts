@@ -1,9 +1,10 @@
-import { Client, GatewayIntentBits, Interaction, AutocompleteInteraction, ActivityType, PresenceUpdateStatus } from 'discord.js';
+import { Client, GatewayIntentBits, Interaction, AutocompleteInteraction, ModalSubmitInteraction, ActivityType, PresenceUpdateStatus } from 'discord.js';
 import { validateConfig, getBotConfig } from './core/config';
 import { CommandManager } from './core/commandManager';
 import { PurgeCommand } from './commands/purgeCommand';
 import { HelpCommand } from './commands/helpCommand';
 import { AdminCommand } from './commands/adminCommand';
+import { CustomizeCommand } from './commands/customizeCommand';
 import { sendError } from './core/response';
 import { logger } from './utils/logger';
 import { LogArea, LogLevel } from './types/logger';
@@ -44,6 +45,7 @@ export class PurgeBot {
     this.commandManager.register(new PurgeCommand());
     this.commandManager.register(new HelpCommand());
     this.commandManager.register(new AdminCommand());
+    this.commandManager.register(new CustomizeCommand());
   }
 
   private updatePresence(): void {
@@ -100,12 +102,23 @@ export class PurgeBot {
         }
       } else if (interaction.isAutocomplete()) {
         await this.handleAutocomplete(interaction);
+      } else if (interaction.isModalSubmit()) {
+        await this.handleModalSubmit(interaction);
       }
     } catch (error) {
       logger.error(LogArea.COMMANDS, `Error handling interaction: ${error}`);
 
       if (interaction.isChatInputCommand() && !interaction.replied && !interaction.deferred) {
         await sendError(interaction, 'An unexpected error occurred. Please try again later.');
+      }
+    }
+  }
+
+  private async handleModalSubmit(interaction: ModalSubmitInteraction): Promise<void> {
+    if (interaction.customId === 'customize_modal') {
+      const command = this.commandManager.getCommand('customize');
+      if (command instanceof CustomizeCommand) {
+        await command.handleModalSubmit(interaction);
       }
     }
   }

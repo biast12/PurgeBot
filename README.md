@@ -30,6 +30,15 @@ Managing message history in Discord has never been easier. PurgeBot is the **pre
 - **`/purge webhook`** - Remove all messages sent by webhooks
 - **`/purge deleted`** - Remove messages from deleted Discord accounts
 
+#### **✨ Premium — Server Customization**
+
+Unlock per-server customization with a [Server Subscription](https://discord.com/application-directory):
+
+- **`/customize`** - Customize the bot's appearance for your server (requires **Administrator** permission)
+  - Custom bot nickname per server
+  - Custom bot avatar per server
+  - Remove the "Powered by PurgeBot" branded footer
+
 #### **🔍 Advanced Content Filtering**
 
 Filter messages with precision using our intelligent filtering system:
@@ -191,20 +200,24 @@ npm install
 # Required
 TOKEN=your_bot_token_here
 
-# Optional - Error Logging (requires MongoDB Atlas)
+# Optional - Error Logging & Customization (requires MongoDB Atlas)
 DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/PurgeBot
 
 # Optional - Admin Commands
 ADMIN_IDS=your_discord_user_id,other_admin_ids
 ADMIN_GUILD_ID=your_support_server_id
+
+# Optional - Premium Features (/customize command)
+PREMIUM_SKU_ID=your_sku_id_here
 ```
 
 **Environment Variables:**
 
 - `TOKEN` - Your Discord bot token (required)
-- `DATABASE_URL` - MongoDB connection string for error logging (optional)
+- `DATABASE_URL` - MongoDB connection string for error logging and customization storage (optional)
 - `ADMIN_IDS` - Comma-separated Discord user IDs authorized for admin commands (optional)
 - `ADMIN_GUILD_ID` - Guild ID where admin commands are registered (optional)
+- `PREMIUM_SKU_ID` - Discord SKU ID for the Server Subscription (optional, enables `/customize`)
 
 4. Register commands:
 

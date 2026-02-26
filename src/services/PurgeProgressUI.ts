@@ -9,6 +9,7 @@ import {
 } from "discord.js";
 import { CONSTANTS } from "../config/constants";
 import { operationManager } from "./OperationManager";
+import { customizationService } from "./CustomizationService";
 
 export class PurgeProgressUI {
   async sendInitialProgress(
@@ -168,6 +169,10 @@ export class PurgeProgressUI {
     mainContainer.addTextDisplayComponents(...textComponents);
 
     const components: any[] = [mainContainer];
+
+    // Append branding footer unless removed for this guild
+    const footer = await customizationService.getBrandingFooter(interaction.guildId);
+    if (footer) components.push(...footer);
 
     await interaction.editReply({
       components: components,

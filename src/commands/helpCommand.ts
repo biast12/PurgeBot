@@ -11,6 +11,7 @@ import {
 import { BaseCommand } from '../core/command';
 import { CommandContext } from '../types';
 import { ResponseBuilder, sendResponse } from '../core/response';
+import { customizationService } from '../services/CustomizationService';
 
 export class HelpCommand extends BaseCommand {
   public readonly name = 'help';
@@ -50,7 +51,8 @@ export class HelpCommand extends BaseCommand {
               '**`/purge everyone`** - Clear all messages (channel/category only)\n' +
               '**`/purge inactive`** - Remove messages from ex-members\n' +
               '**`/purge webhook`** - Delete messages sent by webhooks\n' +
-              '**`/purge deleted`** - Clean up deleted account messages'
+              '**`/purge deleted`** - Clean up deleted account messages\n' +
+              '**`/customize`** ✨ - Customize the bot\'s appearance for this server'
             )
         )
     );
@@ -117,6 +119,10 @@ export class HelpCommand extends BaseCommand {
       );
 
     response.addComponent(row);
+
+    // Append branding footer unless removed for this guild
+    const footer = await customizationService.getBrandingFooter(interaction.guildId);
+    if (footer) footer.forEach(f => response.addComponent(f));
 
     await sendResponse(interaction, response);
   }

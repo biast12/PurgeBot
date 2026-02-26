@@ -5,6 +5,7 @@ import { CommandManager } from '../core/commandManager';
 import { PurgeCommand } from '../commands/purgeCommand';
 import { HelpCommand } from '../commands/helpCommand';
 import { AdminCommand } from '../commands/adminCommand';
+import { CustomizeCommand } from '../commands/customizeCommand';
 import { logger } from './logger';
 import { LogArea } from '../types/logger';
 
@@ -24,9 +25,10 @@ async function registerCommands(): Promise<void> {
     const commandManager = new CommandManager();
     const adminGuildId = process.env.ADMIN_GUILD_ID;
 
-    // Register global commands (purge, help)
+    // Register global commands (purge, help, customize)
     commandManager.register(new PurgeCommand());
     commandManager.register(new HelpCommand());
+    commandManager.register(new CustomizeCommand());
 
     const globalCommands = commandManager.getAllCommands().map(cmd => cmd.buildCommand().toJSON());
 

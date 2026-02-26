@@ -1,5 +1,6 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import { ErrorDocument } from '../models/ErrorDocument';
+import { CustomizationDocument } from '../models/CustomizationDocument';
 
 /**
  * MongoDB connection manager for error logging
@@ -52,6 +53,9 @@ export class DatabaseManager {
 
     // Index for area filtering
     await errors.createIndex({ area: 1, timestamp: -1 });
+
+    // Index for customizations lookup by guild
+    await this.customizations.createIndex({ guild_id: 1 }, { unique: true });
   }
 
   /**
@@ -60,6 +64,14 @@ export class DatabaseManager {
   get errors(): Collection<ErrorDocument> {
     if (!this.db) throw new Error('Database not connected');
     return this.db.collection<ErrorDocument>('errors');
+  }
+
+  /**
+   * Get the customizations collection
+   */
+  get customizations(): Collection<CustomizationDocument> {
+    if (!this.db) throw new Error('Database not connected');
+    return this.db.collection<CustomizationDocument>('customizations');
   }
 
   /**

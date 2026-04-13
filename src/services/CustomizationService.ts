@@ -38,7 +38,7 @@ export class CustomizationService {
     const db = DatabaseManager.getInstance();
     if (!db.isConnected) return null;
 
-    const result = await db.getCustomization(guildId);
+    const result = await db.customizations.get(guildId);
     this.cache.set(guildId, result);
     return result;
   }
@@ -62,7 +62,7 @@ export class CustomizationService {
       ...(data.bot_avatar ? { bot_avatar: data.bot_avatar } : {}),
     };
 
-    await db.upsertCustomization(doc);
+    await db.customizations.upsert(doc);
     this.cache.set(guildId, doc);
     return doc;
   }

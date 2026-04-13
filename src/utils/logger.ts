@@ -201,7 +201,7 @@ export class BotLogger {
 
     if (this.dbEnabled) {
       try {
-        return await this.db.insertError(ErrorDocumentBuilder.create('ERROR', area, message, error, context));
+        return await this.db.errors.insert(ErrorDocumentBuilder.create('ERROR', area, message, error, context));
       } catch (dbError) {
         console.error('Failed to save error to database:', dbError);
       }
@@ -235,7 +235,7 @@ export class BotLogger {
 
     if (this.dbEnabled) {
       try {
-        return await this.db.insertError(ErrorDocumentBuilder.create('CRITICAL', area, message, error, context));
+        return await this.db.errors.insert(ErrorDocumentBuilder.create('CRITICAL', area, message, error, context));
       } catch (dbError) {
         console.error('Failed to save critical error to database:', dbError);
       }
@@ -251,7 +251,7 @@ export class BotLogger {
     if (!this.dbEnabled) return null;
 
     try {
-      return await this.db.getErrorById(errorId);
+      return await this.db.errors.getById(errorId);
     } catch (error) {
       console.error('Failed to fetch error:', error);
       return null;
@@ -265,7 +265,7 @@ export class BotLogger {
     if (!this.dbEnabled) return [];
 
     try {
-      return await this.db.getErrors({ guildId, limit });
+      return await this.db.errors.getMany({ guildId, limit });
     } catch (error) {
       console.error('Failed to fetch recent errors:', error);
       return [];
@@ -279,7 +279,7 @@ export class BotLogger {
     if (!this.dbEnabled) return false;
 
     try {
-      return await this.db.deleteError(errorId);
+      return await this.db.errors.delete(errorId);
     } catch (error) {
       console.error('Failed to delete error:', error);
       return false;
@@ -299,7 +299,7 @@ export class BotLogger {
     if (!this.dbEnabled) return 0;
 
     try {
-      return await this.db.clearErrors(filters);
+      return await this.db.errors.clear(filters);
     } catch (error) {
       console.error('Failed to clear errors:', error);
       return 0;

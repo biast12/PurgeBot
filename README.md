@@ -56,7 +56,7 @@ Filter messages with precision using our intelligent filtering system:
 
 For self-hosted instances, PurgeBot includes powerful admin tools:
 
-- **MongoDB Error Logging** - Persistent error tracking with full context (guild, channel, user, stack traces)
+- **PostgreSQL Error Logging** - Persistent error tracking with full context (guild, channel, user, stack traces)
 - **Remote Error Management** - View and manage errors directly from Discord:
   - `/admin error list` - View recent errors
   - `/admin error check <error_id>` - Detailed error information
@@ -146,10 +146,10 @@ PurgeBot respects Discord's permission system:
 /admin error list limit:25 guild_id:1412752753348055111
 
 # Check specific error details
-/admin error check error_id:ABC12345
+/admin error check error_id:42
 
 # Delete specific error
-/admin error delete error_id:ABC12345
+/admin error delete error_id:42
 
 # Clear errors by level
 /admin error clear level:ERROR
@@ -177,7 +177,7 @@ While we recommend using our hosted version for the best experience, PurgeBot is
 
 - Node.js 18.0.0 or higher
 - Discord Bot Token
-- MongoDB Atlas account (optional - for error logging)
+- PostgreSQL database (optional - for error logging and customization storage)
 
 ### Quick Installation
 
@@ -200,7 +200,7 @@ npm install
 {
   "token": "your_bot_token_here",
 
-  "databaseUrl": "mongodb+srv://username:password@cluster.mongodb.net/PurgeBot",
+  "databaseUrl": "postgresql://username:password@localhost:5432/purgebot",
 
   "adminIds": ["your_discord_user_id", "other_admin_id"],
   "adminGuildId": "your_support_server_id",
@@ -212,7 +212,7 @@ npm install
 **Config Fields:**
 
 - `token` - Your Discord bot token (required)
-- `databaseUrl` - MongoDB connection string for error logging and customization storage (optional)
+- `databaseUrl` - PostgreSQL connection string for error logging and customization storage (optional)
 - `adminIds` - Array of Discord user IDs authorized for admin commands (optional)
 - `adminGuildId` - Guild ID where admin commands are registered (optional)
 - `premiumSkuId` - Discord SKU ID for the Server Subscription (optional, enables `/customize`)
@@ -231,29 +231,23 @@ npm start         # Development (with ts-node)
 npm run start:prod  # Production (compiled)
 ```
 
-### MongoDB Error Logging Setup (Optional)
+### PostgreSQL Error Logging Setup (Optional)
 
-PurgeBot can persist errors to MongoDB Atlas for remote debugging and analysis:
+PurgeBot can persist errors and customizations to a PostgreSQL database for remote debugging and per-guild settings:
 
-1. **Create MongoDB Atlas Account** (free tier available)
-   - Visit [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-   - Create a free M0 cluster
+1. **Create a PostgreSQL database** using any provider (local, [Neon](https://neon.tech), [Supabase](https://supabase.com), [Railway](https://railway.app), etc.)
 
-2. **Configure Database Access**
-   - Go to "Database Access" → "Add New Database User"
-   - Create user with "Read and write to any database" permission
-   - Save the username and password
+2. **Run the schema** to create the required tables:
 
-3. **Get Connection String**
-   - Click "Connect" on your cluster → "Connect your application"
-   - Copy the connection string
-   - Replace `<password>` with your database user's password
+   ```bash
+   psql your_connection_string -f schema.sql
+   ```
 
-4. **Add to `config.json`:**
+3. **Add to `config.json`:**
 
    ```json
    {
-     "databaseUrl": "mongodb+srv://username:password@cluster.mongodb.net/PurgeBot"
+     "databaseUrl": "postgresql://username:password@localhost:5432/purgebot"
    }
    ```
 

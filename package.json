@@ -14,12 +14,13 @@
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
+    "@types/pg": "^8.11.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "discord.js": "^14.25.1",
-    "mongodb": "^7.1.0"
+    "pg": "^8.13.3"
   },
   "engines": {
     "node": ">=18.0.0"

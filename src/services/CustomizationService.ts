@@ -38,8 +38,7 @@ export class CustomizationService {
     const db = DatabaseManager.getInstance();
     if (!db.isConnected) return null;
 
-    const doc = await db.customizations.findOne({ guild_id: guildId });
-    const result = doc ?? null;
+    const result = await db.getCustomization(guildId);
     this.cache.set(guildId, result);
     return result;
   }
@@ -55,7 +54,6 @@ export class CustomizationService {
     if (!db.isConnected) throw new Error('Database not connected');
 
     const doc: CustomizationDocument = {
-      _id: guildId,
       guild_id: guildId,
       remove_branding: data.remove_branding,
       updated_at: new Date().toISOString(),
@@ -64,7 +62,7 @@ export class CustomizationService {
       ...(data.bot_avatar ? { bot_avatar: data.bot_avatar } : {}),
     };
 
-    await db.customizations.replaceOne({ guild_id: guildId }, doc, { upsert: true });
+    await db.upsertCustomization(doc);
     this.cache.set(guildId, doc);
     return doc;
   }

@@ -1,7 +1,7 @@
 {
   "token": "your_bot_token_here",
 
-  "databaseUrl": "mongodb+srv://username:password@cluster.mongodb.net/PurgeBot",
+  "databaseUrl": "postgresql://username:password@localhost:5432/purgebot",
 
   "adminIds": ["your_discord_user_id", "other_admin_id"],
   "adminGuildId": "your_support_server_id",

@@ -193,28 +193,16 @@ export class BotLogger {
       command?: string;
       metadata?: Record<string, any>;
     }
-  ): Promise<string | undefined> {
-    // Log to console (existing behavior)
+  ): Promise<number | undefined> {
     this.error(area, message);
     if (error?.stack) {
       console.error(error.stack);
     }
 
-    // Save to database if enabled
     if (this.dbEnabled) {
       try {
-        const errorDoc = ErrorDocumentBuilder.create(
-          'ERROR',
-          area,
-          message,
-          error,
-          context
-        );
-
-        await this.db.errors.insertOne(errorDoc as any);
-        return errorDoc._id;
+        return await this.db.insertError(ErrorDocumentBuilder.create('ERROR', area, message, error, context));
       } catch (dbError) {
-        // Fallback: if database fails, at least we have console logs
         console.error('Failed to save error to database:', dbError);
       }
     }
@@ -239,7 +227,7 @@ export class BotLogger {
       command?: string;
       metadata?: Record<string, any>;
     }
-  ): Promise<string | undefined> {
+  ): Promise<number | undefined> {
     this.critical(area, message);
     if (error?.stack) {
       console.error(error.stack);
@@ -247,16 +235,7 @@ export class BotLogger {
 
     if (this.dbEnabled) {
       try {
-        const errorDoc = ErrorDocumentBuilder.create(
-          'CRITICAL',
-          area,
-          message,
-          error,
-          context
-        );
-
-        await this.db.errors.insertOne(errorDoc as any);
-        return errorDoc._id;
+        return await this.db.insertError(ErrorDocumentBuilder.create('CRITICAL', area, message, error, context));
       } catch (dbError) {
         console.error('Failed to save critical error to database:', dbError);
       }
@@ -268,11 +247,11 @@ export class BotLogger {
   /**
    * Get a specific error by ID
    */
-  async getError(errorId: string): Promise<ErrorDocument | null> {
+  async getError(errorId: number): Promise<ErrorDocument | null> {
     if (!this.dbEnabled) return null;
 
     try {
-      return await this.db.errors.findOne({ _id: errorId }) as ErrorDocument | null;
+      return await this.db.getErrorById(errorId);
     } catch (error) {
       console.error('Failed to fetch error:', error);
       return null;
@@ -286,16 +265,7 @@ export class BotLogger {
     if (!this.dbEnabled) return [];
 
     try {
-      const query: any = {};
-      if (guildId) {
-        query.guild_id = guildId;
-      }
-
-      return await this.db.errors
-        .find(query)
-        .sort({ timestamp: -1 })
-        .limit(limit)
-        .toArray() as ErrorDocument[];
+      return await this.db.getErrors({ guildId, limit });
     } catch (error) {
       console.error('Failed to fetch recent errors:', error);
       return [];
@@ -305,12 +275,11 @@ export class BotLogger {
   /**
    * Delete a specific error by ID
    */
-  async deleteError(errorId: string): Promise<boolean> {
+  async deleteError(errorId: number): Promise<boolean> {
     if (!this.dbEnabled) return false;
 
     try {
-      const result = await this.db.errors.deleteOne({ _id: errorId });
-      return result.deletedCount > 0;
+      return await this.db.deleteError(errorId);
     } catch (error) {
       console.error('Failed to delete error:', error);
       return false;
@@ -330,32 +299,7 @@ export class BotLogger {
     if (!this.dbEnabled) return 0;
 
     try {
-      const query: any = {};
-
-      if (filters.area) {
-        query.area = filters.area;
-      }
-
-      if (filters.level) {
-        query.level = filters.level.toUpperCase();
-      }
-
-      if (filters.guildId) {
-        query.guild_id = filters.guildId;
-      }
-
-      if (filters.olderThanDays) {
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - filters.olderThanDays);
-        query.timestamp = { $lt: cutoffDate.toISOString() };
-      }
-
-      if (filters.messagePattern) {
-        query.message = { $regex: filters.messagePattern, $options: 'i' };
-      }
-
-      const result = await this.db.errors.deleteMany(query);
-      return result.deletedCount;
+      return await this.db.clearErrors(filters);
     } catch (error) {
       console.error('Failed to clear errors:', error);
       return 0;

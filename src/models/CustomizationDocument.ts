@@ -1,5 +1,4 @@
 export interface CustomizationDocument {
-  _id: string;             // guild_id (used as unique key)
   guild_id: string;
   bot_name?: string;       // guild nickname override (1–32 chars)
   bot_avatar?: string;     // base64 data URI stored for reference

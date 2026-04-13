@@ -141,15 +141,15 @@ export class PurgeBot {
   private async shutdown(): Promise<void> {
     logger.info(LogArea.SHUTDOWN, 'Shutting down gracefully...');
 
-    // Disconnect from MongoDB
+    // Disconnect from PostgreSQL
     try {
       const db = DatabaseManager.getInstance();
       if (db.isConnected) {
         await db.disconnect();
-        logger.info(LogArea.SHUTDOWN, 'MongoDB disconnected');
+        logger.info(LogArea.SHUTDOWN, 'PostgreSQL disconnected');
       }
     } catch (error) {
-      logger.error(LogArea.SHUTDOWN, `Error disconnecting from MongoDB: ${error}`);
+      logger.error(LogArea.SHUTDOWN, `Error disconnecting from PostgreSQL: ${error}`);
     }
 
     await this.client.destroy();
@@ -160,16 +160,16 @@ export class PurgeBot {
   public async start(): Promise<void> {
     const { databaseUrl, token } = getBotConfig();
 
-    // Connect to MongoDB if databaseUrl is provided
+    // Connect to PostgreSQL if databaseUrl is provided
     if (databaseUrl) {
-      logger.info(LogArea.STARTUP, 'Connecting to MongoDB...');
+      logger.info(LogArea.STARTUP, 'Connecting to PostgreSQL...');
       try {
         const db = DatabaseManager.getInstance();
         await db.connect(databaseUrl);
         logger.enableDatabase();
-        logger.info(LogArea.STARTUP, 'MongoDB connected - error logging enabled');
+        logger.info(LogArea.STARTUP, 'PostgreSQL connected - error logging enabled');
       } catch (error) {
-        logger.error(LogArea.STARTUP, `Failed to connect to MongoDB: ${error}`);
+        logger.error(LogArea.STARTUP, `Failed to connect to PostgreSQL: ${error}`);
         logger.warning(LogArea.STARTUP, 'Continuing without database error logging');
       }
     } else {

@@ -21,11 +21,12 @@ export class AdminCommand extends BaseCommand {
             sub
               .setName('check')
               .setDescription('View details of a specific error')
-              .addStringOption(opt =>
+              .addIntegerOption(opt =>
                 opt
                   .setName('error_id')
                   .setDescription('The error ID to check')
                   .setRequired(true)
+                  .setMinValue(1)
               )
           )
           .addSubcommand(sub =>
@@ -50,11 +51,12 @@ export class AdminCommand extends BaseCommand {
             sub
               .setName('delete')
               .setDescription('Delete a specific error')
-              .addStringOption(opt =>
+              .addIntegerOption(opt =>
                 opt
                   .setName('error_id')
                   .setDescription('The error ID to delete')
                   .setRequired(true)
+                  .setMinValue(1)
               )
           )
           .addSubcommand(sub =>
@@ -138,7 +140,7 @@ export class AdminCommand extends BaseCommand {
   }
 
   private async handleErrorCheck(interaction: ChatInputCommandInteraction): Promise<void> {
-    const errorId = interaction.options.getString('error_id', true);
+    const errorId = interaction.options.getInteger('error_id', true);
 
     const error = await logger.getError(errorId);
 
@@ -159,7 +161,7 @@ export class AdminCommand extends BaseCommand {
 
     const embed = new EmbedBuilder()
       .setColor(error.level === 'CRITICAL' ? Colors.DarkRed : Colors.Orange)
-      .setTitle(`🔍 Error Details: ${error._id}`)
+      .setTitle(`🔍 Error Details: #${error.id}`)
       .addFields(
         { name: 'Level', value: error.level, inline: true },
         { name: 'Area', value: error.area, inline: true },
@@ -238,7 +240,7 @@ export class AdminCommand extends BaseCommand {
             const levelEmoji = err.level === 'CRITICAL' ? '🔴' : err.level === 'ERROR' ? '🟠' : '🟡';
             const messagePreview =
               err.message.length > 80 ? `${err.message.substring(0, 80)}...` : err.message;
-            return `${levelEmoji} \`${err._id}\` - **${err.area}** - <t:${timestamp}:R>\n${messagePreview}`;
+            return `${levelEmoji} \`#${err.id}\` - **${err.area}** - <t:${timestamp}:R>\n${messagePreview}`;
           })
           .join('\n\n')
       );
@@ -247,7 +249,7 @@ export class AdminCommand extends BaseCommand {
   }
 
   private async handleErrorDelete(interaction: ChatInputCommandInteraction): Promise<void> {
-    const errorId = interaction.options.getString('error_id', true);
+    const errorId = interaction.options.getInteger('error_id', true);
 
     const deleted = await logger.deleteError(errorId);
 

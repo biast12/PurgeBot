@@ -125,6 +125,7 @@ export class DatabaseManager {
         guildId?: string;
         olderThanDays?: number;
         messagePattern?: string;
+        stackTracePattern?: string;
       }): Promise<number> => {
         const conditions: string[] = [];
         const params: any[] = [];
@@ -150,6 +151,10 @@ export class DatabaseManager {
         if (filters.messagePattern) {
           params.push(`%${filters.messagePattern}%`);
           conditions.push(`message ILIKE $${params.length}`);
+        }
+        if (filters.stackTracePattern) {
+          params.push(`%${filters.stackTracePattern}%`);
+          conditions.push(`stack_trace ILIKE $${params.length}`);
         }
 
         const where = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';

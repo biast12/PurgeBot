@@ -306,6 +306,7 @@ export class BotLogger {
     guildId?: string;
     olderThanDays?: number;
     messagePattern?: string;
+    stackTracePattern?: string;
   }): Promise<number> {
     if (!this.dbEnabled) return 0;
 

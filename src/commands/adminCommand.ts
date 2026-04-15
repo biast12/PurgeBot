@@ -65,6 +65,11 @@ export class AdminCommand extends BaseCommand {
               .setDescription('Clear errors with optional filters')
               .addStringOption(opt =>
                 opt
+                  .setName('guild_id')
+                  .setDescription('Filter by guild ID')
+              )
+              .addStringOption(opt =>
+                opt
                   .setName('level')
                   .setDescription('Filter by error level')
                   .setChoices(
@@ -94,6 +99,16 @@ export class AdminCommand extends BaseCommand {
                   .setName('older_than_days')
                   .setDescription('Delete errors older than X days')
                   .setMinValue(1)
+              )
+              .addStringOption(opt =>
+                opt
+                  .setName('message')
+                  .setDescription('Filter by message content (case-insensitive substring match)')
+              )
+              .addStringOption(opt =>
+                opt
+                  .setName('stack_trace')
+                  .setDescription('Filter by stack trace content (case-insensitive substring match)')
               )
           )
       );
@@ -271,20 +286,29 @@ export class AdminCommand extends BaseCommand {
   }
 
   private async handleErrorClear(interaction: ChatInputCommandInteraction): Promise<void> {
+    const guildId = interaction.options.getString('guild_id') || undefined;
     const level = interaction.options.getString('level') || undefined;
     const area = interaction.options.getString('area') as LogArea | undefined;
     const olderThanDays = interaction.options.getInteger('older_than_days') || undefined;
+    const messagePattern = interaction.options.getString('message') || undefined;
+    const stackTracePattern = interaction.options.getString('stack_trace') || undefined;
 
     const deletedCount = await logger.clearErrors({
+      guildId,
       level,
       area,
-      olderThanDays
+      olderThanDays,
+      messagePattern,
+      stackTracePattern
     });
 
     const filters: string[] = [];
+    if (guildId) filters.push(`Guild ID: ${guildId}`);
     if (level) filters.push(`Level: ${level}`);
     if (area) filters.push(`Area: ${area}`);
     if (olderThanDays) filters.push(`Older than ${olderThanDays} days`);
+    if (messagePattern) filters.push(`Message contains: ${messagePattern}`);
+    if (stackTracePattern) filters.push(`Stack trace contains: ${stackTracePattern}`);
 
     const embed = new EmbedBuilder()
       .setColor(Colors.Green)

@@ -17,7 +17,6 @@ export const CONSTANTS = {
   // Parallel processing settings
   MAX_PARALLEL_WORKERS: 3,
   MIN_CHANNELS_FOR_PARALLEL: 2,
-  WORKER_TIMEOUT: 300000, // 5 minutes
   PARALLEL_RETRY_ATTEMPTS: 2,
 
   REQUIRED_PERMISSIONS: ['ViewChannel', 'ReadMessageHistory', 'ManageMessages'] as const,

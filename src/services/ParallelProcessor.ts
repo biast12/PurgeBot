@@ -24,7 +24,6 @@ interface WorkerStatus {
 interface ProcessorOptions {
   maxWorkers?: number;
   maxRetries?: number;
-  workerTimeout?: number;
   priorityBoost?: {
     smallChannels?: number; // Boost priority for small channels (quick wins)
     largeChannels?: number; // Lower priority for large channels
@@ -38,7 +37,6 @@ export class ParallelProcessor extends EventEmitter {
   private processing: boolean = false;
   private maxWorkers: number;
   private maxRetries: number;
-  private workerTimeout: number;
   private processedChannels: Set<string> = new Set();
   private failedChannels: Map<string, Error> = new Map();
 
@@ -57,7 +55,6 @@ export class ParallelProcessor extends EventEmitter {
     super();
     this.maxWorkers = options.maxWorkers || 3; // Default to 3 parallel workers
     this.maxRetries = options.maxRetries || 2;
-    this.workerTimeout = options.workerTimeout || 300000; // 5 minutes default
 
     // Initialize workers
     for (let i = 0; i < this.maxWorkers; i++) {
@@ -160,12 +157,8 @@ export class ParallelProcessor extends EventEmitter {
       this.metrics.currentQueueSize = this.queue.length;
 
       try {
-        // Process channel with timeout
-        const result = await this.processWithTimeout(
-          processFn(task.channel, task.options, task.operationId),
-          this.workerTimeout,
-          task.channel.name
-        );
+        // Process channel
+        const result = await processFn(task.channel, task.options, task.operationId);
 
         // Mark as processed
         this.processedChannels.add(task.channel.id);
@@ -233,22 +226,6 @@ export class ParallelProcessor extends EventEmitter {
         this.metrics.activeWorkers = this.workers.filter(w => w.busy).length;
       }
     }
-  }
-
-  /**
-   * Process with timeout to prevent hanging
-   */
-  private async processWithTimeout<T>(
-    promise: Promise<T>,
-    timeoutMs: number,
-    channelName: string
-  ): Promise<T> {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error(`Channel ${channelName} processing timeout after ${timeoutMs}ms`)), timeoutMs)
-      )
-    ]);
   }
 
   /**

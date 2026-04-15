@@ -72,7 +72,6 @@ export class PurgeService {
         const processor = new ParallelProcessor({
           maxWorkers: Math.min(CONSTANTS.MAX_PARALLEL_WORKERS, channels.length),
           maxRetries: CONSTANTS.PARALLEL_RETRY_ATTEMPTS,
-          workerTimeout: CONSTANTS.WORKER_TIMEOUT,
           priorityBoost: {
             smallChannels: 20,
             largeChannels: -10,

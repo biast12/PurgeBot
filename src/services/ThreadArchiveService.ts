@@ -1,7 +1,6 @@
-import { ThreadChannel, ChannelType } from 'discord.js';
+import { ThreadChannel, ChannelType, RESTJSONErrorCodes } from 'discord.js';
 import { logger } from '../utils/logger';
 import { LogArea } from '../types/logger';
-import { ERROR_CODES } from '../config/constants';
 
 export interface ThreadArchiveState {
   wasArchived: boolean | null;
@@ -37,9 +36,9 @@ export class ThreadArchiveService {
       await thread.setArchived(false, 'Unarchiving for purge operation');
       return true;
     } catch (error: any) {
-      if (error.code === ERROR_CODES.MISSING_ACCESS) {
+      if (error.code === RESTJSONErrorCodes.MissingAccess) {
         logger.warning(LogArea.PURGE, `Missing permission to unarchive thread: ${thread.name}`);
-      } else if (error.code === ERROR_CODES.UNKNOWN_CHANNEL) {
+      } else if (error.code === RESTJSONErrorCodes.UnknownChannel) {
         logger.warning(LogArea.PURGE, `Thread no longer exists: ${thread.name}`);
       } else {
         logger.error(LogArea.PURGE, `Failed to unarchive thread ${thread.name}: ${error.message}`);

@@ -166,6 +166,18 @@ export class PurgeProgressUI {
       );
     }
 
+    const skippedChannels = data.channels.filter(ch => ch.error);
+    if (skippedChannels.length > 0) {
+      const skippedList = skippedChannels
+        .map(ch => `• ${ch.channelName}: ${ch.error}`)
+        .join("\n");
+
+      textComponents.push(
+        new TextDisplayBuilder()
+          .setContent(`\n**Skipped Channels**\n${skippedList}`)
+      );
+    }
+
     mainContainer.addTextDisplayComponents(...textComponents);
 
     const components: any[] = [mainContainer];

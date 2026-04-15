@@ -1,4 +1,4 @@
-import { CONSTANTS, ERROR_CODES } from "../config/constants";
+import { CONSTANTS } from "../config/constants";
 import { logger } from "./logger";
 import { LogArea } from "../types/logger";
 import { predictiveThrottler } from "../services/PredictiveThrottler";
@@ -157,7 +157,7 @@ export class RateLimiter {
 
       return result;
     } catch (error: any) {
-      if (error.code === ERROR_CODES.RATE_LIMITED || error.status === 429) {
+      if (error.status === 429) {
         this.metrics.rateLimitHits++;
 
         if (retries < CONSTANTS.MAX_RETRIES) {

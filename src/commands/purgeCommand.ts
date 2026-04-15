@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionsBitField, InteractionContextType } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, ChannelType } from 'discord.js';
 import { BaseCommand } from '../core/command';
 import { CommandContext, AutocompleteContext } from '../types';
 import { sendError } from '../core/response';
@@ -422,7 +422,7 @@ export class PurgeCommand extends BaseCommand {
       return;
     }
 
-    if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageMessages)) {
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageMessages)) {
       await sendError(interaction, 'You need Manage Messages permission to use this command.');
       return;
     }
@@ -434,24 +434,15 @@ export class PurgeCommand extends BaseCommand {
     }
 
     const requiredPermissions = [
-      PermissionsBitField.Flags.ViewChannel,
-      PermissionsBitField.Flags.ReadMessageHistory,
-      PermissionsBitField.Flags.ManageMessages
+      PermissionFlagsBits.ViewChannel,
+      PermissionFlagsBits.ReadMessageHistory,
+      PermissionFlagsBits.ManageMessages
     ];
 
-    const missingPermissions = requiredPermissions.filter(perm => !botMember.permissions.has(perm));
+    const missingPermissions = botMember.permissions.missing(requiredPermissions);
 
     if (missingPermissions.length > 0) {
-      const permissionNames = missingPermissions.map(perm => {
-        switch (perm) {
-          case PermissionsBitField.Flags.ViewChannel: return 'View Channel';
-          case PermissionsBitField.Flags.ReadMessageHistory: return 'Read Message History';
-          case PermissionsBitField.Flags.ManageMessages: return 'Manage Messages';
-          default: return 'Unknown';
-        }
-      }).join(', ');
-
-      await sendError(interaction, `I'm missing required permissions: ${permissionNames}. Please ensure I have these permissions to purge messages.`);
+      await sendError(interaction, `I'm missing required permissions: ${missingPermissions.join(', ')}. Please ensure I have these permissions to purge messages.`);
       return;
     }
 
@@ -849,22 +840,37 @@ export class PurgeCommand extends BaseCommand {
       if (targetChannel && targetChannel.permissionsFor) {
         const botMember = guild.members.me;
         if (botMember) {
-          const channelPerms = targetChannel.permissionsFor(botMember);
-          const missingChannelPerms = [];
+          const textChannelTypes = [
+            ChannelType.GuildText,
+            ChannelType.GuildAnnouncement,
+            ChannelType.GuildVoice,
+            ChannelType.GuildForum
+          ];
+          const requiredPerms = [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.ManageMessages
+          ];
 
-          if (!channelPerms?.has(PermissionsBitField.Flags.ViewChannel)) {
-            missingChannelPerms.push('View Channel');
-          }
-          if (!channelPerms?.has(PermissionsBitField.Flags.ReadMessageHistory)) {
-            missingChannelPerms.push('Read Message History');
-          }
-          if (!channelPerms?.has(PermissionsBitField.Flags.ManageMessages)) {
-            missingChannelPerms.push('Manage Messages');
-          }
+          const missingIn = (ch: any): string[] =>
+            ch.permissionsFor(botMember)?.missing(requiredPerms) ?? [];
 
-          if (missingChannelPerms.length > 0) {
-            await sendError(interaction, `I'm missing the following permissions in ${targetChannel.name}: **${missingChannelPerms.join(', ')}**`);
-            return;
+          if (targetChannel.type === ChannelType.GuildCategory) {
+            const problematic = guild.channels.cache
+              .filter((ch: any) => ch.parentId === targetId && textChannelTypes.includes(ch.type))
+              .filter((ch: any) => missingIn(ch).length > 0)
+              .map((ch: any) => `#${ch.name}`);
+
+            if (problematic.size > 0) {
+              await sendError(interaction, `I'm missing required permissions in: **${[...problematic.values()].join(', ')}**`);
+              return;
+            }
+          } else {
+            const missing = missingIn(targetChannel);
+            if (missing.length > 0) {
+              await sendError(interaction, `I'm missing the following permissions in ${targetChannel.name}: **${missing.join(', ')}**`);
+              return;
+            }
           }
         }
       }

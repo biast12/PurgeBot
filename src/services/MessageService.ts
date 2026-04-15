@@ -1,8 +1,10 @@
 import {
-  Message
+  Message,
+  RESTJSONErrorCodes,
+  DiscordjsErrorCodes
 } from "discord.js";
 import { TextBasedChannel } from "../types";
-import { CONSTANTS, ERROR_CODES } from "../config/constants";
+import { CONSTANTS } from "../config/constants";
 import { RateLimiter } from "../utils/RateLimiter";
 import { ContentFilter } from "./ContentFilter";
 import { batchOptimizer } from "./BatchOptimizer";
@@ -65,6 +67,9 @@ export class MessageService {
         if (!lastMessageId) break;
 
       } catch (error: any) {
+        if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
+          throw error;
+        }
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching user messages in channel ${channel.id}`,
@@ -147,6 +152,9 @@ export class MessageService {
         if (!lastMessageId) break;
 
       } catch (error: any) {
+        if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
+          throw error;
+        }
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching role messages in channel ${channel.id}`,
@@ -210,6 +218,9 @@ export class MessageService {
         if (!lastMessageId) break;
 
       } catch (error: any) {
+        if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
+          throw error;
+        }
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching all messages in channel ${channel.id}`,
@@ -277,6 +288,9 @@ export class MessageService {
         if (!lastMessageId) break;
 
       } catch (error: any) {
+        if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
+          throw error;
+        }
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching inactive user messages in channel ${channel.id}`,
@@ -338,6 +352,9 @@ export class MessageService {
         if (!lastMessageId) break;
 
       } catch (error: any) {
+        if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
+          throw error;
+        }
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching webhook messages in channel ${channel.id}`,
@@ -473,7 +490,7 @@ export class MessageService {
         );
 
         // Check if it's a rate limit error
-        if (error.code === ERROR_CODES.RATE_LIMITED || error.status === 429) {
+        if (error.status === 429) {
           rateLimitHit = true;
         }
 
@@ -528,7 +545,7 @@ export class MessageService {
           try {
             await message.delete();
           } catch (innerError: any) {
-            if (innerError.name === ERROR_CODES.CHANNEL_NOT_CACHED) {
+            if (innerError.name === DiscordjsErrorCodes.ChannelNotCached) {
               // Channel was evicted from cache during a long operation — re-fetch it and retry once
               await message.client.channels.fetch(message.channelId);
               await message.delete();
@@ -550,7 +567,7 @@ export class MessageService {
         }
       } catch (error: any) {
         // Enhanced error handling for threads
-        if (error.code === ERROR_CODES.THREAD_ARCHIVED) {
+        if (error.code === RESTJSONErrorCodes.InvalidActionOnArchivedThread) {
           await logger.logError(
             LogArea.SERVICES,
             `Thread became archived during deletion in channel ${_channel.id}`,
@@ -568,7 +585,7 @@ export class MessageService {
             }
           );
           break;
-        } else if (error.code !== ERROR_CODES.UNKNOWN_MESSAGE && error.name !== ERROR_CODES.CHANNEL_NOT_CACHED) {
+        } else if (error.code !== RESTJSONErrorCodes.UnknownMessage && error.name !== DiscordjsErrorCodes.ChannelNotCached) {
           await logger.logError(
             LogArea.SERVICES,
             `Error deleting message ${message.id} in channel ${_channel.id}`,

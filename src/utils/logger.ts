@@ -1,6 +1,7 @@
 import { LogLevel, LogArea, LoggerConfig } from '../types/logger';
 import { DatabaseManager } from '../services/DatabaseManager';
 import { ErrorDocument, ErrorDocumentBuilder } from '../models/ErrorDocument';
+import { RESTJSONErrorCodes } from 'discord.js';
 
 export class BotLogger {
   private static instance: BotLogger;
@@ -194,6 +195,11 @@ export class BotLogger {
       metadata?: Record<string, any>;
     }
   ): Promise<number | undefined> {
+    const errorCode = (error as any)?.code;
+    if (errorCode === RESTJSONErrorCodes.MissingAccess || errorCode === RESTJSONErrorCodes.MissingPermissions) {
+      return undefined;
+    }
+
     this.error(area, message);
     if (error?.stack) {
       console.error(error.stack);
@@ -228,6 +234,11 @@ export class BotLogger {
       metadata?: Record<string, any>;
     }
   ): Promise<number | undefined> {
+    const errorCode = (error as any)?.code;
+    if (errorCode === RESTJSONErrorCodes.MissingAccess || errorCode === RESTJSONErrorCodes.MissingPermissions) {
+      return undefined;
+    }
+
     this.critical(area, message);
     if (error?.stack) {
       console.error(error.stack);

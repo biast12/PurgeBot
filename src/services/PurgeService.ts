@@ -15,7 +15,8 @@ import { operationManager } from "./OperationManager";
 import { ParallelProcessor } from "./ParallelProcessor";
 import { logger } from "../utils/logger";
 import { LogArea } from "../types/logger";
-import { CONSTANTS, ERROR_CODES } from "../config/constants";
+import { CONSTANTS } from "../config/constants";
+import { RESTJSONErrorCodes } from "discord.js";
 
 export class PurgeService {
   async purgeMessages(
@@ -250,20 +251,18 @@ export class PurgeService {
             allThreads.push(...archivedPrivate.threads.values());
           } catch (error: any) {
             // May fail if bot lacks ManageThreads permission, continue with other threads
-            if (error.code !== ERROR_CODES.MISSING_ACCESS) {
-              await logger.logError(
-                LogArea.PURGE,
-                `Failed to fetch private threads for channel ${channel.name}`,
-                error,
-                {
-                  channelId: channel.id,
-                  channelName: channel.name,
-                  guildId: channel.guild?.id,
-                  guildName: channel.guild?.name,
-                  metadata: { channelType: channel.type, threadType: 'private' }
-                }
-              );
-            }
+            await logger.logError(
+              LogArea.PURGE,
+              `Failed to fetch private threads for channel ${channel.name}`,
+              error,
+              {
+                channelId: channel.id,
+                channelName: channel.name,
+                guildId: channel.guild?.id,
+                guildName: channel.guild?.name,
+                metadata: { channelType: channel.type, threadType: 'private' }
+              }
+            );
           }
         } catch (error: any) {
           await logger.logError(
@@ -333,8 +332,14 @@ export class PurgeService {
         });
       }
     } catch (error: any) {
-      console.error(`Error purging channel ${channel.name}:`, error);
-      result.error = error.message || "Unknown error";
+      if (error.code === RESTJSONErrorCodes.MissingAccess) {
+        result.error = "Missing access";
+      } else if (error.code === RESTJSONErrorCodes.MissingPermissions) {
+        result.error = "Missing permissions";
+      } else {
+        console.error(`Error purging channel ${channel.name}:`, error);
+        result.error = error.message || "Unknown error";
+      }
     }
 
     return result;

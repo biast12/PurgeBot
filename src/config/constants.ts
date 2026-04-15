@@ -22,14 +22,3 @@ export const CONSTANTS = {
 
   REQUIRED_PERMISSIONS: ['ViewChannel', 'ReadMessageHistory', 'ManageMessages'] as const,
 } as const;
-
-export const ERROR_CODES = {
-  INVALID_COMMAND: 50027,
-  RATE_LIMITED: 429,
-  MISSING_PERMISSIONS: 50013,
-  UNKNOWN_MESSAGE: 10008,
-  UNKNOWN_CHANNEL: 10003,
-  MISSING_ACCESS: 50001,
-  THREAD_ARCHIVED: 50083,
-  CHANNEL_NOT_CACHED: 'ChannelNotCached',
-} as const;

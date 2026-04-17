@@ -70,6 +70,7 @@ export class MessageService {
         if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
           throw error;
         }
+        if (error.code === RESTJSONErrorCodes.UnknownChannel) break;
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching user messages in channel ${channel.id}`,
@@ -155,6 +156,7 @@ export class MessageService {
         if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
           throw error;
         }
+        if (error.code === RESTJSONErrorCodes.UnknownChannel) break;
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching role messages in channel ${channel.id}`,
@@ -221,6 +223,7 @@ export class MessageService {
         if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
           throw error;
         }
+        if (error.code === RESTJSONErrorCodes.UnknownChannel) break;
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching all messages in channel ${channel.id}`,
@@ -291,6 +294,7 @@ export class MessageService {
         if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
           throw error;
         }
+        if (error.code === RESTJSONErrorCodes.UnknownChannel) break;
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching inactive user messages in channel ${channel.id}`,
@@ -355,6 +359,7 @@ export class MessageService {
         if (error.code === RESTJSONErrorCodes.MissingAccess || error.code === RESTJSONErrorCodes.MissingPermissions) {
           throw error;
         }
+        if (error.code === RESTJSONErrorCodes.UnknownChannel) break;
         await logger.logError(
           LogArea.SERVICES,
           `Error fetching webhook messages in channel ${channel.id}`,

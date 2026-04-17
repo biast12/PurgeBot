@@ -545,7 +545,7 @@ export class MessageService {
           try {
             await message.delete();
           } catch (innerError: any) {
-            if (innerError.name === DiscordjsErrorCodes.ChannelNotCached) {
+            if (innerError.code === DiscordjsErrorCodes.ChannelNotCached) {
               // Channel was evicted from cache during a long operation — re-fetch it and retry once
               await message.client.channels.fetch(message.channelId);
               await message.delete();
@@ -585,7 +585,9 @@ export class MessageService {
             }
           );
           break;
-        } else if (error.code !== RESTJSONErrorCodes.UnknownMessage && error.name !== DiscordjsErrorCodes.ChannelNotCached) {
+        } else if (error.code === RESTJSONErrorCodes.UnknownChannel || error.code === DiscordjsErrorCodes.ChannelNotCached) {
+          break;
+        } else if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
           await logger.logError(
             LogArea.SERVICES,
             `Error deleting message ${message.id} in channel ${_channel.id}`,

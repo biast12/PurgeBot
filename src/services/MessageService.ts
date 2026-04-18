@@ -477,22 +477,28 @@ export class MessageService {
           batchSuccess = true;
         }
       } catch (error: any) {
-        await logger.logError(
-          LogArea.SERVICES,
-          `Error bulk deleting messages in channel ${channel.id}`,
-          error,
-          {
-            channelId: channel.id,
-            channelName: channel.name,
-            guildId: (channel as any).guild?.id,
-            guildName: (channel as any).guild?.name,
-            metadata: {
-              operationId,
-              chunkSize: chunk.length,
-              operationType: 'bulkDelete'
+        if (error.code === RESTJSONErrorCodes.UnknownChannel) {
+          return deleted;
+        }
+
+        if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
+          await logger.logError(
+            LogArea.SERVICES,
+            `Error bulk deleting messages in channel ${channel.id}`,
+            error,
+            {
+              channelId: channel.id,
+              channelName: channel.name,
+              guildId: (channel as any).guild?.id,
+              guildName: (channel as any).guild?.name,
+              metadata: {
+                operationId,
+                chunkSize: chunk.length,
+                operationType: 'bulkDelete'
+              }
             }
-          }
-        );
+          );
+        }
 
         // Check if it's a rate limit error
         if (error.status === 429) {

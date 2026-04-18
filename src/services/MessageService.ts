@@ -17,7 +17,7 @@ export class MessageService {
 
   constructor() {
     this.rateLimiter = new RateLimiter({
-      baseDelay: 100,
+      baseDelay: 3000,
       maxDelay: 5000,
       enableMetrics: false // Set to true for debugging
     });

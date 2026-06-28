@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **This repository is archived.** Development has moved to
+> [PurgeBot-net](https://github.com/PurgeBot-net). Please use the new
+> organization for the latest code, issues, and releases.
+
 # 🧹 PurgeBot - The Ultimate Discord Message Management Solution
 
 > **Effortlessly manage your Discord server's message history with the most powerful and reliable purge bot available.**
